@@ -534,19 +534,3 @@ a.pill { text-decoration: none; }
 .howto summary { min-height: 44px; display: flex; align-items: center; color: var(--accent); font-weight: 600; cursor: pointer; }
 .howto ol { padding-left: 20px; margin: 4px 0 0; }
 .howto li + li { margin-top: 6px; }
-
-/* ---------- Car picture ---------- */
-.car-card {
-  margin: 0 -4px 8px;
-  padding: 8px 4px 0;
-  text-align: center;
-}
-.car-art { display: block; width: 100%; max-width: 440px; height: auto; margin: 0 auto; }
-.car-odometer {
-  margin: 2px 0 0;
-  color: var(--muted);
-  font-size: 0.85rem;
-  font-weight: 600;
-  font-variant-numeric: tabular-nums;
-}
-.car-card + h2 { margin-top: 16px; }

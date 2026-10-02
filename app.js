@@ -1,6 +1,6 @@
 'use strict';
 
-const APP_VERSION = '0.8.0';
+const APP_VERSION = '0.8.1';
 
 /* ---------- Tabs ----------
    The part after # in the address picks the screen: #garage, #faults, #settings */
@@ -252,14 +252,6 @@ function renderGarage() {
     button.addEventListener('click', () => openGarageForm(e));
     return el('li', {}, button);
   }));
-
-  // Latest recorded mileage, under the car picture
-  const withMiles = garage.filter((e) => e.mileage); // newest first
-  const odo = document.getElementById('car-odometer');
-  odo.hidden = withMiles.length === 0;
-  if (withMiles.length) {
-    odo.textContent = `${withMiles[0].mileage.toLocaleString('en-US')} mi · as of ${formatDate(withMiles[0].date)}`;
-  }
 
   const empty = document.getElementById('garage-empty');
   empty.hidden = shown.length > 0;
