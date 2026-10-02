@@ -536,7 +536,7 @@ a.pill { text-decoration: none; }
 .howto li + li { margin-top: 6px; }
 
 /* ---------- Header photo ---------- */
-.brand { display: flex; align-items: center; gap: 12px; min-width: 0; }
+.brand { flex: 1; min-width: 0; } /* pushes the pills and photo to the right */
 .brand-photo {
   flex: none;
   width: 93px;
@@ -544,3 +544,9 @@ a.pill { text-decoration: none; }
   filter: drop-shadow(0 1px 1.5px rgba(0, 0, 0, 0.18));
 }
 .credit { margin: 12px 0 0; font-size: 0.75rem; }
+/* Notices (Offline / Sync problem) get their own line under the title,
+   so the title and photo never get squeezed */
+.app-header { flex-wrap: wrap; row-gap: 8px; }
+.app-header h1, .app-header .subtitle { white-space: nowrap; }
+.header-pills { order: 3; flex-basis: 100%; }
+.header-pills:not(:has(> :not([hidden]))) { display: none; }
