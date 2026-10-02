@@ -339,7 +339,7 @@ dialog.sheet::backdrop { background: rgba(0, 0, 0, 0.5); }
 .field { display: block; margin: 0 0 16px; padding: 0; border: 0; min-width: 0; }
 .field > span, .field > legend { display: block; font-weight: 700; font-size: 0.9rem; margin-bottom: 6px; padding: 0; }
 .field em { font-style: normal; font-weight: 400; }
-.field input[type="text"], .field input[type="date"], .field textarea {
+.field input[type="text"], .field input[type="password"], .field input[type="date"], .field textarea {
   display: block;
   width: 100%;
   min-height: 48px;
@@ -523,3 +523,14 @@ dialog.sheet::backdrop { background: rgba(0, 0, 0, 0.5); }
 .todo.is-done .todo-title { text-decoration: line-through; color: var(--muted); }
 .totals { grid-template-columns: 1.25fr 1.1fr 0.8fr; }
 .totals.totals-2 { grid-template-columns: 1fr 1fr; }
+
+/* ---------- Sync ---------- */
+.header-pills { display: flex; gap: 6px; flex: none; }
+a.pill { text-decoration: none; }
+.sync-status { font-weight: 700; }
+.sync-status.ok { color: var(--ok); }
+.sync-status.problem { color: var(--danger); }
+.howto { margin-top: 16px; }
+.howto summary { min-height: 44px; display: flex; align-items: center; color: var(--accent); font-weight: 600; cursor: pointer; }
+.howto ol { padding-left: 20px; margin: 4px 0 0; }
+.howto li + li { margin-top: 6px; }

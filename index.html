@@ -32,7 +32,10 @@
       <h1>Z4 Log</h1>
       <p class="subtitle">2008 Z4 3.0i · E85</p>
     </div>
-    <span id="net-status" class="pill" hidden>Offline</span>
+    <span class="header-pills">
+      <a href="#settings" id="sync-pill" class="pill" hidden>Sync problem</a>
+      <span id="net-status" class="pill" hidden>Offline</span>
+    </span>
   </header>
 
   <div id="update-banner" class="banner" hidden>
@@ -132,6 +135,41 @@
     <section id="view-settings" class="view" data-view="settings" hidden>
       <h2>Settings</h2>
 
+      <div class="card" id="sync-card">
+        <h3>Sync</h3>
+
+        <div id="sync-on" hidden>
+          <p>Syncing with <strong id="sync-repo"></strong></p>
+          <p class="sync-status" id="sync-status" aria-live="polite"></p>
+          <button type="button" class="btn btn-block" id="sync-now">Sync now</button>
+          <button type="button" class="btn btn-block btn-secondary" id="sync-disconnect">Turn off sync on this device</button>
+        </div>
+
+        <form id="sync-off" autocomplete="off" hidden>
+          <p class="muted">Keeps your phone and Mac matched through a private GitHub project. Set it up once on each device.</p>
+          <label class="field">
+            <span>Private data project</span>
+            <input type="text" name="repo" value="davyrockett/z4-log-data" autocapitalize="off" spellcheck="false">
+          </label>
+          <label class="field">
+            <span>Access key</span>
+            <input type="password" name="token" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="github_pat_…">
+          </label>
+          <p class="form-error" id="sync-error" role="alert" hidden></p>
+          <button type="submit" class="btn btn-block">Connect</button>
+          <details class="howto">
+            <summary>How to make an access key</summary>
+            <ol>
+              <li>On github.com, go to <strong>Settings → Developer settings → Personal access tokens → Fine-grained tokens → Generate new token</strong>.</li>
+              <li>Name it “Z4 Log sync”, and choose the longest expiration offered.</li>
+              <li><strong>Repository access:</strong> Only select repositories → <strong>z4-log-data</strong>.</li>
+              <li><strong>Permissions → Repository permissions → Contents:</strong> Read and write.</li>
+              <li>Generate, copy the key, and paste it above. Use the same key on your other device.</li>
+            </ol>
+          </details>
+        </form>
+      </div>
+
       <div class="card">
         <h3>Appearance</h3>
         <div class="segmented" role="radiogroup" aria-label="Theme">
@@ -145,7 +183,7 @@
       <div class="card">
         <h3>Back up</h3>
         <p>Last backup: <strong id="last-backup">never</strong></p>
-        <p class="muted">Your data only lives on this device. Save a backup to iCloud Drive (or AirDrop it to your Mac) every week or two.</p>
+        <p class="muted" id="backup-note">Your data only lives on this device. Save a backup to iCloud Drive (or AirDrop it to your Mac) every week or two.</p>
         <button type="button" class="btn btn-block" id="export-json">Save backup (.json)</button>
 
         <h3 class="subhead">Export for spreadsheets</h3>
@@ -361,6 +399,7 @@
   </dialog>
 
   <script src="db.js"></script>
+  <script src="sync.js"></script>
   <script src="app.js"></script>
 </body>
 </html>

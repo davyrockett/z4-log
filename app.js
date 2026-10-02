@@ -1,6 +1,6 @@
 'use strict';
 
-const APP_VERSION = '0.6.0';
+const APP_VERSION = '0.7.0';
 
 /* ---------- Tabs ----------
    The part after # in the address picks the screen: #garage, #faults, #settings */
@@ -707,7 +707,7 @@ document.getElementById('import-file').addEventListener('change', async (event) 
 
   const msg = `Import ${plural(clean.garage.length, 'garage entry').replace(/entrys$/, 'entries')}, ${clean.faults.length} faults & warnings and ${plural(clean.todos.length, 'to-do')}?` +
     (skipped ? `\n\n${plural(skipped, 'item')} ${skipped === 1 ? 'is' : 'are'} missing a date, title, code, light name or job and will be skipped.` : '') +
-    `\n\nThis replaces everything currently in the app.`;
+    (sync.isOn() ? `\n\nThis replaces everything in the app, on all your synced devices.` : `\n\nThis replaces everything currently in the app.`);
   if (!confirm(msg)) return;
 
   try {
@@ -836,14 +836,20 @@ function updateBackupStatus() {
   const unsaved = !lastBackup || (lastChange && lastChange > lastBackup);
   const overdue = !lastBackup || Date.now() - new Date(lastBackup) >= REMIND_AFTER_DAYS * DAY;
   const snoozed = snoozeUntil && Date.now() < Number(snoozeUntil);
+  // With sync on, GitHub keeps every version, so no nagging.
+  if (sync.isOn()) { document.getElementById('backup-reminder').hidden = true; return; }
 
   document.getElementById('backup-reminder').hidden = !(hasData && unsaved && overdue && !snoozed);
   document.getElementById('backup-reminder-text').textContent =
     lastBackup ? `Last backup ${daysAgoText(lastBackup)}.` : 'You haven’t backed up yet.';
 }
 
-// Every save stamps the time; the banner re-checks whenever a list redraws.
-db.onChange = () => storeSet(LAST_CHANGE_KEY, new Date().toISOString());
+// Every save stamps the time (the banner re-checks whenever a list redraws)
+// and tells sync to upload shortly.
+db.onChange = () => {
+  storeSet(LAST_CHANGE_KEY, new Date().toISOString());
+  sync.soon();
+};
 
 document.getElementById('backup-now').addEventListener('click', exportBackup);
 document.getElementById('backup-later').addEventListener('click', () => {
@@ -851,11 +857,112 @@ document.getElementById('backup-later').addEventListener('click', () => {
   updateBackupStatus();
 });
 
+/* ---------- Sync (see sync.js) ---------- */
+function timeAgoText(iso) {
+  const mins = Math.floor((Date.now() - new Date(iso)) / 60000);
+  if (mins < 1) return 'just now';
+  if (mins < 60) return `${mins} min ago`;
+  if (mins < 24 * 60) return `${Math.floor(mins / 60)} h ago`;
+  return daysAgoText(iso);
+}
+
+function renderSync() {
+  const on = sync.isOn();
+  document.getElementById('sync-on').hidden = !on;
+  document.getElementById('sync-off').hidden = on;
+  const problem = on && ['auth', 'missing', 'other', 'conflict'].includes(sync.status);
+  document.getElementById('backup-note').textContent = on
+    ? 'Sync keeps every version on GitHub. A backup file is an extra copy for peace of mind.'
+    : 'Your data only lives on this device. Save a backup to iCloud Drive (or AirDrop it to your Mac) every week or two.';
+  document.getElementById('sync-pill').hidden = !problem;
+  if (!on) return;
+
+  document.getElementById('sync-repo').textContent = sync.repo();
+  const status = document.getElementById('sync-status');
+  const last = sync.lastSynced();
+  status.className = 'sync-status';
+  if (sync.status === 'syncing') {
+    status.textContent = 'Syncing…';
+  } else if (sync.status === 'ok') {
+    status.textContent = `✓ Up to date · synced ${timeAgoText(last)}`;
+    status.classList.add('ok');
+  } else if (sync.status === 'offline') {
+    status.textContent = `Offline. Your changes are saved here and will sync when you’re back online.${last ? ` Last synced ${timeAgoText(last)}.` : ''}`;
+  } else if (problem) {
+    status.textContent = sync.message;
+    status.classList.add('problem');
+  } else {
+    status.textContent = last ? `Last synced ${timeAgoText(last)}` : 'Not synced yet';
+  }
+}
+
+sync.onStatus = renderSync;
+sync.onUpdated = () => {
+  loadGarage();
+  loadFaults();
+  loadTodos();
+};
+
+document.getElementById('sync-off').addEventListener('submit', async (event) => {
+  event.preventDefault();
+  const form = event.target;
+  const err = document.getElementById('sync-error');
+  const repo = form.elements.repo.value.trim().replace(/^https:\/\/github\.com\//, '').replace(/\/$/, '');
+  const token = form.elements.token.value.trim();
+  err.hidden = true;
+  if (!/^[\w.-]+\/[\w.-]+$/.test(repo)) { err.textContent = 'Project should look like name/z4-log-data.'; err.hidden = false; return; }
+  if (!token) { err.textContent = 'Paste your access key.'; err.hidden = false; return; }
+
+  const button = form.querySelector('button[type="submit"]');
+  button.disabled = true;
+  button.textContent = 'Checking…';
+  try {
+    const { remoteCount } = await sync.connect(repo, token);
+    form.elements.token.value = '';
+    const localCount = garage.length + faults.length + todos.length;
+    let mode = 'merge';
+    if (remoteCount && localCount) {
+      mode = confirm(
+        `Your synced data has ${remoteCount} items. This device has ${localCount}.\n\n` +
+        'OK: use the synced data on this device (recommended).\n' +
+        'Cancel: combine both. If this device has copies of the same items from an import, you’ll see doubles.'
+      ) ? 'replace-local' : 'merge';
+    }
+    renderSync();
+    await sync.run(mode);
+    toast(sync.status === 'ok' ? 'Sync is on' : 'Connected. Sync will retry.');
+  } catch (e) {
+    err.textContent = e.message || 'Couldn’t connect.';
+    err.hidden = false;
+  } finally {
+    button.disabled = false;
+    button.textContent = 'Connect';
+  }
+});
+
+document.getElementById('sync-now').addEventListener('click', () => sync.run());
+document.getElementById('sync-disconnect').addEventListener('click', () => {
+  if (!confirm('Turn off sync on this device? Your data stays here; it just stops matching your other device. You’ll need the access key to turn it back on.')) return;
+  sync.disconnect();
+  updateBackupStatus();
+  toast('Sync turned off on this device');
+});
+
+// When to sync: on open, when you come back to the app, when the
+// connection returns, and every 2 minutes while the app is on screen.
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState === 'visible') sync.run();
+});
+window.addEventListener('online', () => sync.run());
+setInterval(() => {
+  if (document.visibilityState === 'visible' && navigator.onLine) sync.run();
+}, 2 * 60 * 1000);
+setInterval(() => { if (sync.status === 'ok') renderSync(); }, 30 * 1000); // keep "synced 3 min ago" fresh
+
 /* ---------- Start ---------- */
 showView();
-loadGarage();
-loadFaults();
-loadTodos();
+Promise.all([loadGarage(), loadFaults(), loadTodos()]).then(() => sync.run());
+renderSync();
 setTheme(getTheme());
 updateNetStatus();
 requestPersistentStorage().then(refreshFacts);

@@ -1,8 +1,8 @@
 # Z4 Log
 
 A personal garage log, fault/warning tracker and to-do list for a 2008 BMW Z4 3.0i (E85).
-It runs as an app on your iPhone's Home Screen, works with no signal, and keeps
-all its data on the device. There's no server and no account.
+It runs as an app on your iPhone's Home Screen and your Mac's Dock, works with no
+signal, and keeps the phone and Mac in sync through a private GitHub project.
 
 **Live app:** https://davyrockett.github.io/z4-log/ (open in Safari on iPhone → Share → Add to Home Screen)
 
@@ -14,19 +14,21 @@ all its data on the device. There's no server and no account.
 | `styles.css` | Colors, sizes, light/dark themes |
 | `app.js` | The app's behavior |
 | `db.js` | Saves data on the device (IndexedDB): garage, faults & warnings, to-dos |
+| `sync.js` | Keeps devices matched through the private GitHub project |
 | `sw.js` | The "service worker": saves the app on the phone so it works offline |
 | `manifest.webmanifest` | Tells the phone the app's name, icon, and to open full-screen |
 | `icons/` | App icons (redraw with `python3 tools/make-icons.py`) |
 | `private/` | **Your data files. Never uploaded** (listed in `.gitignore`) |
-| `Start Z4 Log.command` | Double-click to run the app on this Mac |
+| `Start Z4 Log.command` | Double-click to run a local test copy on this Mac |
 
-## Try it on the Mac
+## Using it
 
-```bash
-cd ~/Documents/z4-log && python3 -m http.server 8765
-```
+- **iPhone:** open the live app in Safari → Share → **Add to Home Screen**.
+- **Mac:** open the live app in Safari → **File → Add to Dock**.
+- **First time on each device:** Settings → **Sync** → paste your access key → Connect.
 
-Then open http://localhost:8765 in Safari or Chrome. Press Ctrl+C in Terminal to stop.
+`Start Z4 Log.command` runs a local copy for testing changes before publishing.
+Its data is separate from the live app.
 
 ## Publishing a change
 
@@ -36,15 +38,24 @@ Then open http://localhost:8765 in Safari or Chrome. Press Ctrl+C in Terminal to
 4. GitHub Pages updates within a minute or two. On the phone, open the app and
    an **Update** banner appears. Tap it.
 
-## Your data
+## Your data and sync
 
-Data lives in the browser's storage on each device. The iPhone and the Mac do
-**not** sync.
+Your data is stored on each device **and** in the private GitHub project
+`davyrockett/z4-log-data` (file `data.json`). Each device syncs when the app
+opens, a moment after you save something, when the connection comes back, and
+every couple of minutes while it's on screen. With no signal, everything is
+saved on the device and syncs later.
 
-- **Settings → Save backup (.json)**: the full backup. On iPhone this opens the
-  Share sheet: choose *Save to Files → iCloud Drive*. A yellow banner reminds you
-  when you have changes and the last backup is a week or more old.
-- **Settings → Import backup**: loads a backup, replacing what's in the app. Also
-  how you move data between the Mac and the iPhone.
-- **Garage log / Faults & warnings (.csv)**: for Numbers, Excel or Google Sheets. These
-  can't be imported back.
+- If the same item is edited on two devices, the most recent edit wins.
+- Deletions sync too, so deleted items don't come back.
+- GitHub keeps every sync as a version, so earlier versions of `data.json` can
+  be recovered from the project's history.
+- The access key is stored only in that device's browser storage, and only
+  allows reading and writing that one private project.
+
+Backup files are still available in Settings:
+
+- **Save backup (.json)**: a full copy. On iPhone this opens the Share sheet.
+- **Import backup**: replaces everything, on every synced device. Use it only
+  when something has gone wrong.
+- **Garage log / Faults & warnings (.csv)**: for Numbers, Excel or Google Sheets.
