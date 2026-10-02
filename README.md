@@ -42,5 +42,5 @@ Data lives in the browser's storage on each device. The iPhone and the Mac do
   when you have changes and the last backup is a week or more old.
 - **Settings → Import backup**: loads a backup, replacing what's in the app. Also
   how you move data between the Mac and the iPhone.
-- **Garage log / Fault codes (.csv)**: for Numbers, Excel or Google Sheets. These
+- **Garage log / Faults & warnings (.csv)**: for Numbers, Excel or Google Sheets. These
   can't be imported back.

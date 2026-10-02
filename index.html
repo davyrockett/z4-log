@@ -76,7 +76,7 @@
     </section>
 
     <section id="view-faults" class="view" data-view="faults" hidden>
-      <h2>Fault codes</h2>
+      <h2>Faults &amp; warnings</h2>
 
       <div class="totals totals-2" aria-live="polite">
         <div><span class="label">Open</span><span class="value" id="fault-open-count">0</span></div>
@@ -89,12 +89,24 @@
         <button type="button" role="radio" data-filter="all">All</button>
       </div>
 
-      <button type="button" class="btn btn-block" id="fault-add">+ Add fault code</button>
+      <div class="btn-row">
+        <button type="button" class="btn" id="light-add">+ Warning light</button>
+        <button type="button" class="btn" id="fault-add">+ Fault code</button>
+      </div>
 
-      <ul class="entry-list" id="fault-list"></ul>
+      <div id="light-section">
+        <h3 class="list-heading">Warning lights</h3>
+        <ul class="entry-list" id="light-list"></ul>
+      </div>
+
+      <div id="code-section">
+        <h3 class="list-heading">Fault codes</h3>
+        <ul class="entry-list" id="fault-list"></ul>
+      </div>
+
       <div class="card empty" id="fault-empty" hidden>
-        <p>No fault codes.</p>
-        <p class="muted">Tap “Add fault code” when your scanner shows one.</p>
+        <p>Nothing logged yet.</p>
+        <p class="muted">Add a warning light when one comes on the dash, or a fault code when your scanner shows one.</p>
       </div>
     </section>
 
@@ -120,7 +132,7 @@
         <h3 class="subhead">Export for spreadsheets</h3>
         <p class="muted">Opens in Numbers, Excel or Google Sheets. Can't be imported back. Use the backup for that.</p>
         <button type="button" class="btn btn-block btn-secondary" id="export-garage-csv">Garage log (.csv)</button>
-        <button type="button" class="btn btn-block btn-secondary" id="export-faults-csv">Fault codes (.csv)</button>
+        <button type="button" class="btn btn-block btn-secondary" id="export-faults-csv">Faults &amp; warnings (.csv)</button>
       </div>
 
       <div class="card">
@@ -151,7 +163,7 @@
     </a>
     <a href="#faults" data-tab="faults">
       <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3 2 20h20L12 3zm0 6v5m0 3v.5"/></svg>
-      <span>Faults</span>
+      <span>Faults &amp; warnings</span>
     </a>
     <a href="#settings" data-tab="settings">
       <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M12 2v3m0 14v3M2 12h3m14 0h3M4.9 4.9 7 7m10 10 2.1 2.1M4.9 19.1 7 17m10-10 2.1-2.1"/></svg>
@@ -233,20 +245,44 @@
       <div class="sheet-body">
         <p class="form-error" id="fault-error" role="alert" hidden></p>
 
+        <input type="hidden" name="kind" value="code">
+
+        <label class="field" id="light-name-field">
+          <span>Warning light</span>
+          <input type="text" name="name" list="light-suggestions" autocomplete="off" placeholder="e.g. Brake pad wear">
+          <datalist id="light-suggestions">
+            <option value="Brake pad wear"></option>
+            <option value="Check engine (EML)"></option>
+            <option value="Check engine (MIL)"></option>
+            <option value="DSC"></option>
+            <option value="ABS"></option>
+            <option value="Airbag"></option>
+            <option value="Tire pressure"></option>
+            <option value="Oil level"></option>
+            <option value="Oil pressure"></option>
+            <option value="Coolant temperature"></option>
+            <option value="Charging / battery"></option>
+            <option value="Brake fluid"></option>
+            <option value="Bulb failure"></option>
+            <option value="Service due"></option>
+          </datalist>
+        </label>
+
         <div class="field-row">
-          <label class="field">
+          <label class="field" id="code-field">
             <span>Code</span>
-            <input type="text" name="code" required autocomplete="off" autocapitalize="characters" spellcheck="false" placeholder="e.g. P0171" class="mono">
+            <input type="text" name="code" autocomplete="off" autocapitalize="characters" spellcheck="false" placeholder="e.g. 2D07" class="mono">
           </label>
           <label class="field">
             <span>Date seen</span>
-            <input type="date" name="dateSeen" required>
+            <input type="date" name="dateSeen">
           </label>
         </div>
+        <p class="muted hint">Don’t know when it first appeared? Clear the date.</p>
 
         <label class="field">
           <span>Description</span>
-          <textarea name="description" rows="2" placeholder="e.g. System too lean, bank 1"></textarea>
+          <textarea name="description" rows="3" placeholder="What the scanner or manual says, and anything you noticed"></textarea>
         </label>
 
         <fieldset class="field">
@@ -269,7 +305,7 @@
           </label>
         </div>
 
-        <button type="button" class="btn btn-block btn-danger" id="fault-delete" hidden>Delete fault code</button>
+        <button type="button" class="btn btn-block btn-danger" id="fault-delete" hidden>Delete</button>
       </div>
     </form>
   </dialog>

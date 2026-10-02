@@ -429,3 +429,13 @@ dialog.sheet::backdrop { background: rgba(0, 0, 0, 0.5); }
 .banner-warn .btn { background: #1a1400; color: #ffd23f; }
 .banner-warn .btn:first-child { background: transparent; color: #1a1400; border: 2px solid #1a1400; }
 .banner-actions { display: flex; gap: 8px; flex: none; }
+
+/* ---------- Faults & warnings sections ---------- */
+.btn-row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 16px; }
+.btn-row .btn { padding: 0 8px; }
+.list-heading { margin: 8px 0 10px; }
+#light-section + #code-section .list-heading { margin-top: 24px; }
+.fault-name { font-size: 1.15rem; font-weight: 800; overflow-wrap: anywhere; }
+.tabbar span { text-align: center; line-height: 1.15; }
+.field-row:has(> #code-field[hidden]) { grid-template-columns: 1fr; }
+.hint { margin: -8px 0 16px; }

@@ -1,6 +1,6 @@
 'use strict';
 
-const APP_VERSION = '0.4.0';
+const APP_VERSION = '0.5.0';
 
 /* ---------- Tabs ----------
    The part after # in the address picks the screen: #garage, #faults, #settings */
@@ -320,15 +320,43 @@ document.getElementById('garage-delete').addEventListener('click', async () => {
 garageDialog.querySelector('[data-close]').addEventListener('click', () => garageDialog.close());
 document.getElementById('garage-add').addEventListener('click', () => openGarageForm(null));
 
-/* ---------- Fault codes ---------- */
+/* ---------- Faults & warnings ----------
+   One list, two kinds of item: fault codes from the scanner (kind "code")
+   and dashboard warning lights (kind "light"). Both can be open or fixed. */
 let faults = [];
 let faultFilter = 'open';
 
+const KIND_WORD = { code: 'Fault code', light: 'Warning light' };
+const faultLabel = (f) => (f.kind === 'light' ? f.name : f.code);
+
 async function loadFaults() {
-  faults = (await db.getAll('faults')).sort((a, b) =>
-    (b.dateFixed || b.dateSeen).localeCompare(a.dateFixed || a.dateSeen) ||
+  faults = (await db.getAll('faults')).map((f) => ({ kind: 'code', ...f })).sort((a, b) =>
+    (b.dateFixed || b.dateSeen || '').localeCompare(a.dateFixed || a.dateSeen || '') ||
     (b.createdAt || '').localeCompare(a.createdAt || ''));
   renderFaults();
+}
+
+function faultCard(f) {
+  const isOpen = f.status === 'open';
+  const when = !isOpen ? `Fixed ${formatDate(f.dateFixed || f.dateSeen)}`
+    : f.dateSeen ? `Seen ${formatDate(f.dateSeen)}` : 'Date seen unknown';
+
+  const main = el('button', { type: 'button', class: 'entry' },
+    el('div', { class: 'entry-top' },
+      el('span', { class: f.kind === 'light' ? 'fault-name' : 'fault-code mono' }, faultLabel(f)),
+      el('span', { class: `badge ${f.status}` }, isOpen ? 'Open' : 'Fixed')),
+    f.description ? el('div', { class: 'fault-desc' }, f.description) : null,
+    el('div', { class: 'entry-date' }, when),
+    !isOpen && f.fixNotes ? el('div', { class: 'fault-fix-notes' }, f.fixNotes) : null);
+  main.addEventListener('click', () => openFaultForm(f));
+
+  const card = el('div', { class: `fault-card ${isOpen ? 'is-open' : 'is-fixed'}` }, main);
+  if (isOpen) {
+    const fixBtn = el('button', { type: 'button', class: 'btn btn-secondary' }, 'Mark fixed…');
+    fixBtn.addEventListener('click', () => openFaultForm(f, { markFixed: true }));
+    card.append(el('div', { class: 'fault-actions' }, fixBtn));
+  }
+  return el('li', {}, card);
 }
 
 function renderFaults() {
@@ -341,35 +369,17 @@ function renderFaults() {
   }
 
   const shown = faultFilter === 'all' ? faults : faults.filter((f) => f.status === faultFilter);
-  const list = document.getElementById('fault-list');
-  list.replaceChildren(...shown.map((f) => {
-    const isOpen = f.status === 'open';
-    const when = isOpen
-      ? `Seen ${formatDate(f.dateSeen)}`
-      : `Fixed ${formatDate(f.dateFixed || f.dateSeen)}`;
-
-    const main = el('button', { type: 'button', class: 'entry' },
-      el('div', { class: 'entry-top' },
-        el('span', { class: 'fault-code mono' }, f.code),
-        el('span', { class: `badge ${f.status}` }, isOpen ? 'Open' : 'Fixed')),
-      f.description ? el('div', { class: 'fault-desc' }, f.description) : null,
-      el('div', { class: 'entry-date' }, when),
-      !isOpen && f.fixNotes ? el('div', { class: 'fault-fix-notes' }, f.fixNotes) : null);
-    main.addEventListener('click', () => openFaultForm(f));
-
-    const card = el('div', { class: `fault-card ${isOpen ? 'is-open' : 'is-fixed'}` }, main);
-    if (isOpen) {
-      const fixBtn = el('button', { type: 'button', class: 'btn btn-secondary' }, 'Mark fixed…');
-      fixBtn.addEventListener('click', () => openFaultForm(f, { markFixed: true }));
-      card.append(el('div', { class: 'fault-actions' }, fixBtn));
-    }
-    return el('li', {}, card);
-  }));
+  const lights = shown.filter((f) => f.kind === 'light');
+  const codes = shown.filter((f) => f.kind !== 'light');
+  document.getElementById('light-list').replaceChildren(...lights.map(faultCard));
+  document.getElementById('fault-list').replaceChildren(...codes.map(faultCard));
+  document.getElementById('light-section').hidden = lights.length === 0;
+  document.getElementById('code-section').hidden = codes.length === 0;
 
   const empty = document.getElementById('fault-empty');
   empty.hidden = shown.length > 0;
   empty.querySelector('p').textContent =
-    !faults.length ? 'No fault codes.' : faultFilter === 'open' ? 'No open fault codes. Nice.' : 'Nothing here.';
+    !faults.length ? 'Nothing logged yet.' : faultFilter === 'open' ? 'Nothing open. Nice.' : 'Nothing here.';
   updateBackupStatus();
 }
 
@@ -380,7 +390,7 @@ for (const chip of document.querySelectorAll('#fault-filter [data-filter]')) {
   });
 }
 
-/* Add / edit form */
+/* Add / edit form (shared by codes and lights) */
 const faultDialog = document.getElementById('fault-dialog');
 const faultForm = document.getElementById('fault-form');
 let editingFaultId = null;
@@ -395,10 +405,13 @@ for (const radio of faultForm.querySelectorAll('input[name="status"]')) {
   radio.addEventListener('change', syncResolution);
 }
 
-function openFaultForm(fault, { markFixed = false } = {}) {
+function openFaultForm(fault, { markFixed = false, kind = 'code' } = {}) {
   editingFaultId = fault ? fault.id : null;
+  kind = fault ? fault.kind : kind;
   const f = faultForm.elements;
-  f.code.value = fault ? fault.code : '';
+  f.kind.value = kind;
+  f.code.value = fault ? fault.code || '' : '';
+  f.name.value = fault ? fault.name || '' : '';
   f.dateSeen.value = fault ? fault.dateSeen : todayISO();
   f.description.value = fault ? fault.description : '';
   f.status.value = markFixed ? 'fixed' : fault ? fault.status : 'open';
@@ -406,8 +419,10 @@ function openFaultForm(fault, { markFixed = false } = {}) {
   f.fixNotes.value = fault ? fault.fixNotes : '';
   syncResolution();
 
+  document.getElementById('light-name-field').hidden = kind !== 'light';
+  document.getElementById('code-field').hidden = kind === 'light';
   document.getElementById('fault-dialog-title').textContent =
-    markFixed ? 'Mark fixed' : fault ? 'Edit fault code' : 'New fault code';
+    markFixed ? 'Mark fixed' : `${fault ? 'Edit' : 'New'} ${KIND_WORD[kind].toLowerCase()}`;
   document.getElementById('fault-delete').hidden = !fault;
   document.getElementById('fault-error').hidden = true;
   faultDialog.showModal();
@@ -432,19 +447,25 @@ function faultFormError(message) {
 faultForm.addEventListener('submit', async (event) => {
   event.preventDefault();
   const f = faultForm.elements;
-  const code = f.code.value.trim().toUpperCase().replace(/\s+/g, '');
+  const kind = f.kind.value;
+  const code = kind === 'code' ? f.code.value.trim().toUpperCase().replace(/\s+/g, '') : '';
+  const name = kind === 'light' ? f.name.value.trim() : '';
   const status = f.status.value;
   const dateFixed = status === 'fixed' ? (f.dateFixed.value || todayISO()) : '';
 
-  if (!code) return faultFormError('Please enter the code, like P0171.');
-  if (!f.dateSeen.value) return faultFormError('Please pick the date you saw it.');
-  if (dateFixed && dateFixed < f.dateSeen.value) return faultFormError('Date fixed is before the date it was seen.');
+  if (kind === 'code' && !code) return faultFormError('Please enter the code, like 2D07.');
+  if (kind === 'light' && !name) return faultFormError('Please name the warning light, like Brake pad wear.');
+  if (dateFixed && f.dateSeen.value && dateFixed < f.dateSeen.value) {
+    return faultFormError('Date fixed is before the date it was seen.');
+  }
 
   const existing = faults.find((x) => x.id === editingFaultId);
   const now = new Date().toISOString();
   const fault = {
     id: editingFaultId || newId(),
+    kind,
     code,
+    name,
     description: f.description.value.trim(),
     dateSeen: f.dateSeen.value,
     status,
@@ -461,20 +482,23 @@ faultForm.addEventListener('submit', async (event) => {
   }
   faultDialog.close();
   const justFixed = existing && existing.status === 'open' && status === 'fixed';
-  toast(justFixed ? `${code} marked fixed` : existing ? 'Fault code updated' : 'Fault code added');
+  toast(justFixed ? `${faultLabel(fault)} marked fixed`
+    : `${KIND_WORD[kind]} ${existing ? 'updated' : 'added'}`);
   loadFaults();
 });
 
 document.getElementById('fault-delete').addEventListener('click', async () => {
-  if (!editingFaultId || !confirm('Delete this fault code? This can’t be undone.')) return;
+  const kind = faultForm.elements.kind.value;
+  if (!editingFaultId || !confirm(`Delete this ${KIND_WORD[kind].toLowerCase()}? This can’t be undone.`)) return;
   await db.remove('faults', editingFaultId);
   faultDialog.close();
-  toast('Fault code deleted');
+  toast(`${KIND_WORD[kind]} deleted`);
   loadFaults();
 });
 
 faultDialog.querySelector('[data-close]').addEventListener('click', () => faultDialog.close());
-document.getElementById('fault-add').addEventListener('click', () => openFaultForm(null));
+document.getElementById('fault-add').addEventListener('click', () => openFaultForm(null, { kind: 'code' }));
+document.getElementById('light-add').addEventListener('click', () => openFaultForm(null, { kind: 'light' }));
 
 /* ---------- Import backup ---------- */
 function cleanGarageEntry(raw) {
@@ -498,17 +522,23 @@ function cleanGarageEntry(raw) {
 
 function cleanFault(raw) {
   const isDate = (v) => /^\d{4}-\d{2}-\d{2}$/.test(v || '');
-  const code = String((raw && raw.code) || '').trim().toUpperCase().replace(/\s+/g, '');
-  if (!code || !isDate(raw.dateSeen)) return null;
+  if (!raw) return null;
+  const kind = raw.kind === 'light' ? 'light' : 'code';
+  const code = kind === 'code' ? String(raw.code || '').trim().toUpperCase().replace(/\s+/g, '') : '';
+  const name = kind === 'light' ? String(raw.name || '').trim() : '';
+  if (kind === 'code' ? !code : !name) return null;
+  const dateSeen = isDate(raw.dateSeen) ? raw.dateSeen : '';
   const status = raw.status === 'fixed' ? 'fixed' : 'open';
   const now = new Date().toISOString();
   return {
     id: raw.id || newId(),
+    kind,
     code,
+    name,
     description: String(raw.description || ''),
-    dateSeen: raw.dateSeen,
+    dateSeen,
     status,
-    dateFixed: status === 'fixed' ? (isDate(raw.dateFixed) ? raw.dateFixed : raw.dateSeen) : '',
+    dateFixed: status === 'fixed' ? (isDate(raw.dateFixed) ? raw.dateFixed : dateSeen || todayISO()) : '',
     fixNotes: String(raw.fixNotes || ''),
     createdAt: raw.createdAt || now,
     updatedAt: raw.updatedAt || now,
@@ -536,8 +566,8 @@ document.getElementById('import-file').addEventListener('change', async (event) 
   const skipped = garageIn.filter((e) => !e).length + faultsIn.filter((f) => !f).length;
   const clean = { garage: garageIn.filter(Boolean), faults: faultsIn.filter(Boolean) };
 
-  const msg = `Import ${plural(clean.garage.length, 'garage entry').replace(/entrys$/, 'entries')} and ${plural(clean.faults.length, 'fault code')}?` +
-    (skipped ? `\n\n${plural(skipped, 'item')} ${skipped === 1 ? 'is' : 'are'} missing a date, title or code and will be skipped.` : '') +
+  const msg = `Import ${plural(clean.garage.length, 'garage entry').replace(/entrys$/, 'entries')} and ${clean.faults.length} faults & warnings?` +
+    (skipped ? `\n\n${plural(skipped, 'item')} ${skipped === 1 ? 'is' : 'are'} missing a date, title, code or light name and will be skipped.` : '') +
     `\n\nThis replaces everything currently in the app.`;
   if (!confirm(msg)) return;
 
@@ -547,7 +577,7 @@ document.getElementById('import-file').addEventListener('change', async (event) 
     return alert(`Import failed, nothing was changed.\n\n${e.message}`);
   }
   await Promise.all([loadGarage(), loadFaults()]);
-  toast(`Imported ${clean.garage.length} entries, ${plural(clean.faults.length, 'code')}`);
+  toast(`Imported ${clean.garage.length} entries, ${clean.faults.length} faults & warnings`);
   location.hash = '#garage';
 });
 
@@ -610,10 +640,11 @@ function garageCSV() {
 }
 
 function faultsCSV() {
-  const rows = [...faults].sort((a, b) => a.dateSeen.localeCompare(b.dateSeen)).map((f) => [
-    f.code, f.description, f.dateSeen, f.status === 'open' ? 'Open' : 'Fixed', f.dateFixed, f.fixNotes,
+  // oldest first; unknown dates at the end
+  const rows = [...faults].sort((a, b) => (a.dateSeen || '9').localeCompare(b.dateSeen || '9')).map((f) => [
+    KIND_WORD[f.kind], faultLabel(f), f.description, f.dateSeen, f.status === 'open' ? 'Open' : 'Fixed', f.dateFixed, f.fixNotes,
   ]);
-  return toCSV(['Code', 'Description', 'Date seen', 'Status', 'Date fixed', 'Fix notes'], rows);
+  return toCSV(['Type', 'Code or light', 'Description', 'Date seen', 'Status', 'Date fixed', 'Fix notes'], rows);
 }
 
 async function exportBackup() {
