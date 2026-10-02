@@ -1,6 +1,6 @@
 # Z4 Log
 
-A personal garage log and fault-code tracker for a 2008 BMW Z4 3.0i (E85).
+A personal garage log, fault/warning tracker and to-do list for a 2008 BMW Z4 3.0i (E85).
 It runs as an app on your iPhone's Home Screen, works with no signal, and keeps
 all its data on the device. There's no server and no account.
 
@@ -11,10 +11,12 @@ all its data on the device. There's no server and no account.
 | `index.html` | The page itself: header, screens, bottom tabs |
 | `styles.css` | Colors, sizes, light/dark themes |
 | `app.js` | The app's behavior |
+| `db.js` | Saves data on the device (IndexedDB): garage, faults & warnings, to-dos |
 | `sw.js` | The "service worker": saves the app on the phone so it works offline |
 | `manifest.webmanifest` | Tells the phone the app's name, icon, and to open full-screen |
 | `icons/` | App icons (redraw with `python3 tools/make-icons.py`) |
 | `private/` | **Your data files. Never uploaded** (listed in `.gitignore`) |
+| `Start Z4 Log.command` | Double-click to run the app on this Mac |
 
 ## Try it on the Mac
 

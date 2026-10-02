@@ -1,11 +1,11 @@
 'use strict';
 
 /* ---------- On-device database (IndexedDB) ----------
-   Two "stores" (like tables): garage entries and fault codes.
+   Three "stores" (like tables): garage entries, faults & warnings, to-dos.
    Everything here returns a Promise. */
 const DB_NAME = 'z4log';
-const DB_VERSION = 1;
-const STORES = ['garage', 'faults'];
+const DB_VERSION = 2; // 2: added to-dos
+const STORES = ['garage', 'faults', 'todos'];
 
 let dbPromise = null;
 
@@ -19,7 +19,13 @@ function openDB() {
         if (!db.objectStoreNames.contains(name)) db.createObjectStore(name, { keyPath: 'id' });
       }
     };
-    req.onsuccess = () => resolve(req.result);
+    req.onsuccess = () => {
+      const db = req.result;
+      // A newer version of the app (in another tab) needs to upgrade the database:
+      // close this copy and reload so it picks up the new version too.
+      db.onversionchange = () => { db.close(); location.reload(); };
+      resolve(db);
+    };
     req.onerror = () => reject(req.error);
   });
   return dbPromise;

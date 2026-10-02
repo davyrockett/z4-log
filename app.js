@@ -1,10 +1,10 @@
 'use strict';
 
-const APP_VERSION = '0.5.0';
+const APP_VERSION = '0.6.0';
 
 /* ---------- Tabs ----------
    The part after # in the address picks the screen: #garage, #faults, #settings */
-const VIEWS = ['garage', 'faults', 'settings'];
+const VIEWS = ['garage', 'faults', 'todos', 'settings'];
 
 function showView() {
   const name = location.hash.slice(1);
@@ -39,6 +39,12 @@ function setTheme(choice) {
   } catch (e) {}
   if (choice === 'auto') delete document.documentElement.dataset.theme;
   else document.documentElement.dataset.theme = choice;
+
+  // Browser/status bar color: follow the phone in Auto, otherwise the chosen theme
+  for (const meta of document.querySelectorAll('meta[name="theme-color"]')) {
+    meta.dataset.auto ??= meta.content;
+    meta.content = choice === 'auto' ? meta.dataset.auto : choice === 'dark' ? '#0b0d10' : '#ffffff';
+  }
   for (const btn of document.querySelectorAll('[data-theme-choice]')) {
     btn.setAttribute('aria-checked', String(btn.dataset.themeChoice === choice));
   }
@@ -181,6 +187,26 @@ function toast(message) {
   toastTimer = setTimeout(() => { t.hidden = true; }, 2500);
 }
 
+/* ---------- Forms: don't lose typing ----------
+   Each form remembers its contents when opened. Cancel (or Esc on the Mac)
+   asks first if anything changed. */
+const formState = (form) => JSON.stringify([...new FormData(form)]);
+
+function rememberForm(form) {
+  form.dataset.saved = formState(form);
+}
+
+function guardDialog(dialog, form) {
+  const discardOK = () =>
+    formState(form) === form.dataset.saved || confirm('Discard your changes?');
+  dialog.querySelector('[data-close]').addEventListener('click', () => {
+    if (discardOK()) dialog.close();
+  });
+  dialog.addEventListener('cancel', (event) => {
+    if (!discardOK()) event.preventDefault();
+  });
+}
+
 /* ---------- Garage log ---------- */
 const CATEGORIES = ['maintenance', 'repair', 'upgrade', 'diagnosis'];
 const CATEGORY_LABELS = { maintenance: 'Maintenance', repair: 'Repair', upgrade: 'Upgrade', diagnosis: 'Diagnosis' };
@@ -202,8 +228,8 @@ function renderGarage() {
 
   const cost = shown.reduce((sum, e) => sum + (e.cost || 0), 0);
   const hours = shown.reduce((sum, e) => sum + (e.hours || 0), 0);
-  document.getElementById('total-cost').textContent = formatMoney(Math.round(cost * 100) / 100);
-  document.getElementById('total-hours').textContent = formatHours(hours);
+  document.getElementById('total-cost').textContent = moneyWhole.format(Math.round(cost));
+  document.getElementById('total-hours').textContent = `${Number(hours.toFixed(1))} h`;
   document.getElementById('total-count').textContent = String(shown.length);
 
   for (const chip of document.querySelectorAll('#garage-filter [data-filter]')) {
@@ -259,6 +285,7 @@ function openGarageForm(entry) {
   document.getElementById('garage-dialog-title').textContent = entry ? 'Edit entry' : 'New entry';
   document.getElementById('garage-delete').hidden = !entry;
   document.getElementById('garage-error').hidden = true;
+  rememberForm(garageForm);
   garageDialog.showModal();
   garageDialog.querySelector('.sheet-body').scrollTop = 0;
 }
@@ -317,7 +344,7 @@ document.getElementById('garage-delete').addEventListener('click', async () => {
   loadGarage();
 });
 
-garageDialog.querySelector('[data-close]').addEventListener('click', () => garageDialog.close());
+guardDialog(garageDialog, garageForm);
 document.getElementById('garage-add').addEventListener('click', () => openGarageForm(null));
 
 /* ---------- Faults & warnings ----------
@@ -425,6 +452,7 @@ function openFaultForm(fault, { markFixed = false, kind = 'code' } = {}) {
     markFixed ? 'Mark fixed' : `${fault ? 'Edit' : 'New'} ${KIND_WORD[kind].toLowerCase()}`;
   document.getElementById('fault-delete').hidden = !fault;
   document.getElementById('fault-error').hidden = true;
+  rememberForm(faultForm);
   faultDialog.showModal();
 
   const body = faultDialog.querySelector('.sheet-body');
@@ -496,9 +524,104 @@ document.getElementById('fault-delete').addEventListener('click', async () => {
   loadFaults();
 });
 
-faultDialog.querySelector('[data-close]').addEventListener('click', () => faultDialog.close());
+guardDialog(faultDialog, faultForm);
 document.getElementById('fault-add').addEventListener('click', () => openFaultForm(null, { kind: 'code' }));
 document.getElementById('light-add').addEventListener('click', () => openFaultForm(null, { kind: 'light' }));
+
+/* ---------- To-do ---------- */
+let todos = [];
+
+async function loadTodos() {
+  todos = await db.getAll('todos');
+  renderTodos();
+}
+
+function todoItem(t) {
+  const check = el('button', {
+    type: 'button', class: 'todo-check', role: 'checkbox',
+    'aria-checked': String(t.done), 'aria-label': `Done: ${t.title}`,
+  }, el('span'));
+  check.addEventListener('click', () => toggleTodo(t));
+
+  const body = el('button', { type: 'button', class: 'todo-body' },
+    el('div', { class: 'todo-title' }, t.title),
+    t.notes ? el('div', { class: 'todo-notes' }, t.notes) : null);
+  body.addEventListener('click', () => openTodoForm(t));
+
+  return el('li', {}, el('div', { class: `todo ${t.done ? 'is-done' : ''}` }, check, body));
+}
+
+function renderTodos() {
+  // Open jobs in the order added; finished ones most recent first
+  const open = todos.filter((t) => !t.done).sort((a, b) => a.createdAt.localeCompare(b.createdAt));
+  const done = todos.filter((t) => t.done).sort((a, b) => (b.doneAt || '').localeCompare(a.doneAt || ''));
+  document.getElementById('todo-open').replaceChildren(...open.map(todoItem));
+  document.getElementById('todo-done').replaceChildren(...done.map(todoItem));
+  document.getElementById('todo-done-section').hidden = done.length === 0;
+  document.getElementById('todo-empty').hidden = open.length > 0;
+  updateBackupStatus();
+}
+
+async function toggleTodo(t) {
+  const now = new Date().toISOString();
+  await db.put('todos', { ...t, done: !t.done, doneAt: t.done ? '' : now, updatedAt: now });
+  toast(t.done ? 'Moved back to the list' : 'Done ✓');
+  loadTodos();
+}
+
+// Quick add: type a job, press Add (or Return)
+document.getElementById('todo-quick').addEventListener('submit', async (event) => {
+  event.preventDefault();
+  const input = event.target.elements.title;
+  const title = input.value.trim();
+  if (!title) return input.focus();
+  const now = new Date().toISOString();
+  await db.put('todos', { id: newId(), title, notes: '', done: false, doneAt: '', createdAt: now, updatedAt: now });
+  input.value = '';
+  loadTodos();
+});
+
+/* Edit form */
+const todoDialog = document.getElementById('todo-dialog');
+const todoForm = document.getElementById('todo-form');
+let editingTodo = null;
+
+function openTodoForm(t) {
+  editingTodo = t;
+  todoForm.elements.title.value = t.title;
+  todoForm.elements.notes.value = t.notes;
+  document.getElementById('todo-error').hidden = true;
+  rememberForm(todoForm);
+  todoDialog.showModal();
+  todoDialog.querySelector('.sheet-body').scrollTop = 0;
+}
+
+todoForm.addEventListener('submit', async (event) => {
+  event.preventDefault();
+  const title = todoForm.elements.title.value.trim();
+  if (!title) {
+    const err = document.getElementById('todo-error');
+    err.textContent = 'Please describe the job.';
+    err.hidden = false;
+    return;
+  }
+  await db.put('todos', {
+    ...editingTodo, title, notes: todoForm.elements.notes.value.trim(), updatedAt: new Date().toISOString(),
+  });
+  todoDialog.close();
+  toast('To-do updated');
+  loadTodos();
+});
+
+document.getElementById('todo-delete').addEventListener('click', async () => {
+  if (!editingTodo || !confirm('Delete this to-do? This can’t be undone.')) return;
+  await db.remove('todos', editingTodo.id);
+  todoDialog.close();
+  toast('To-do deleted');
+  loadTodos();
+});
+
+guardDialog(todoDialog, todoForm);
 
 /* ---------- Import backup ---------- */
 function cleanGarageEntry(raw) {
@@ -545,6 +668,21 @@ function cleanFault(raw) {
   };
 }
 
+function cleanTodo(raw) {
+  const title = String((raw && raw.title) || '').trim();
+  if (!title) return null;
+  const now = new Date().toISOString();
+  return {
+    id: raw.id || newId(),
+    title,
+    notes: String(raw.notes || ''),
+    done: raw.done === true,
+    doneAt: raw.done === true ? String(raw.doneAt || now) : '',
+    createdAt: raw.createdAt || now,
+    updatedAt: raw.updatedAt || now,
+  };
+}
+
 document.getElementById('import-file').addEventListener('change', async (event) => {
   const input = event.target;
   const file = input.files[0];
@@ -563,11 +701,12 @@ document.getElementById('import-file').addEventListener('change', async (event) 
 
   const garageIn = data.garage.map(cleanGarageEntry);
   const faultsIn = (Array.isArray(data.faults) ? data.faults : []).map(cleanFault);
-  const skipped = garageIn.filter((e) => !e).length + faultsIn.filter((f) => !f).length;
-  const clean = { garage: garageIn.filter(Boolean), faults: faultsIn.filter(Boolean) };
+  const todosIn = (Array.isArray(data.todos) ? data.todos : []).map(cleanTodo); // older backups have none
+  const skipped = [...garageIn, ...faultsIn, ...todosIn].filter((x) => !x).length;
+  const clean = { garage: garageIn.filter(Boolean), faults: faultsIn.filter(Boolean), todos: todosIn.filter(Boolean) };
 
-  const msg = `Import ${plural(clean.garage.length, 'garage entry').replace(/entrys$/, 'entries')} and ${clean.faults.length} faults & warnings?` +
-    (skipped ? `\n\n${plural(skipped, 'item')} ${skipped === 1 ? 'is' : 'are'} missing a date, title, code or light name and will be skipped.` : '') +
+  const msg = `Import ${plural(clean.garage.length, 'garage entry').replace(/entrys$/, 'entries')}, ${clean.faults.length} faults & warnings and ${plural(clean.todos.length, 'to-do')}?` +
+    (skipped ? `\n\n${plural(skipped, 'item')} ${skipped === 1 ? 'is' : 'are'} missing a date, title, code, light name or job and will be skipped.` : '') +
     `\n\nThis replaces everything currently in the app.`;
   if (!confirm(msg)) return;
 
@@ -576,8 +715,8 @@ document.getElementById('import-file').addEventListener('change', async (event) 
   } catch (e) {
     return alert(`Import failed, nothing was changed.\n\n${e.message}`);
   }
-  await Promise.all([loadGarage(), loadFaults()]);
-  toast(`Imported ${clean.garage.length} entries, ${clean.faults.length} faults & warnings`);
+  await Promise.all([loadGarage(), loadFaults(), loadTodos()]);
+  toast('Backup imported');
   location.hash = '#garage';
 });
 
@@ -615,6 +754,7 @@ function backupJSON() {
     exportedAt: new Date().toISOString(),
     garage,
     faults,
+    todos,
   }, null, 2);
 }
 
@@ -692,7 +832,7 @@ function updateBackupStatus() {
 
   document.getElementById('last-backup').textContent = lastBackup ? daysAgoText(lastBackup) : 'never';
 
-  const hasData = garage.length > 0 || faults.length > 0;
+  const hasData = garage.length > 0 || faults.length > 0 || todos.length > 0;
   const unsaved = !lastBackup || (lastChange && lastChange > lastBackup);
   const overdue = !lastBackup || Date.now() - new Date(lastBackup) >= REMIND_AFTER_DAYS * DAY;
   const snoozed = snoozeUntil && Date.now() < Number(snoozeUntil);
@@ -715,6 +855,7 @@ document.getElementById('backup-later').addEventListener('click', () => {
 showView();
 loadGarage();
 loadFaults();
+loadTodos();
 setTheme(getTheme());
 updateNetStatus();
 requestPersistentStorage().then(refreshFacts);

@@ -439,3 +439,87 @@ dialog.sheet::backdrop { background: rgba(0, 0, 0, 0.5); }
 .tabbar span { text-align: center; line-height: 1.15; }
 .field-row:has(> #code-field[hidden]) { grid-template-columns: 1fr; }
 .hint { margin: -8px 0 16px; }
+
+/* ---------- Phase 5 polish ---------- */
+.totals .value { font-size: clamp(1.05rem, 5.6vw, 1.3rem); }
+
+/* ---------- To-do ---------- */
+.tabbar { grid-template-columns: repeat(4, 1fr); }
+
+.quick-add { display: flex; gap: 8px; margin-bottom: 16px; }
+.quick-add input {
+  flex: 1;
+  min-width: 0;
+  min-height: 48px;
+  padding: 10px 12px;
+  border: 2px solid var(--border);
+  border-radius: 10px;
+  background: var(--bg);
+  color: var(--text);
+  font: inherit;
+}
+.quick-add input:focus { outline: none; border-color: var(--accent); }
+
+.todo-list { list-style: none; margin: 0 0 16px; padding: 0; }
+.todo-list li + li { margin-top: 8px; }
+.todo {
+  display: flex;
+  align-items: stretch;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  overflow: hidden;
+}
+.todo-check {
+  flex: none;
+  width: 60px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+}
+.todo-check span {
+  width: 28px;
+  height: 28px;
+  border: 3px solid var(--accent);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.todo-check[aria-checked="true"] span { background: var(--ok); border-color: var(--ok); }
+.todo-check[aria-checked="true"] span::after {
+  content: "";
+  width: 7px;
+  height: 13px;
+  border: solid var(--bg);
+  border-width: 0 3px 3px 0;
+  transform: translateY(-2px) rotate(45deg);
+}
+.todo-body {
+  flex: 1;
+  min-width: 0;
+  padding: 14px 16px 14px 0;
+  border: 0;
+  background: transparent;
+  color: var(--text);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+.todo-title { font-weight: 700; overflow-wrap: anywhere; }
+.todo-notes {
+  color: var(--muted);
+  font-size: 0.9rem;
+  margin-top: 2px;
+  overflow-wrap: anywhere;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.todo.is-done .todo-title { text-decoration: line-through; color: var(--muted); }
+.totals { grid-template-columns: 1.25fr 1.1fr 0.8fr; }
+.totals.totals-2 { grid-template-columns: 1fr 1fr; }

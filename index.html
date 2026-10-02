@@ -13,7 +13,7 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-title" content="Z4 Log">
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
   <meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)">
   <meta name="theme-color" content="#0b0d10" media="(prefers-color-scheme: dark)">
 
@@ -110,6 +110,25 @@
       </div>
     </section>
 
+    <section id="view-todos" class="view" data-view="todos" hidden>
+      <h2>To-do</h2>
+
+      <form id="todo-quick" class="quick-add" autocomplete="off">
+        <input type="text" name="title" placeholder="Add a job…" aria-label="New to-do">
+        <button type="submit" class="btn">Add</button>
+      </form>
+
+      <ul class="todo-list" id="todo-open"></ul>
+      <div class="card empty" id="todo-empty" hidden>
+        <p>Nothing to do. Go drive it.</p>
+      </div>
+
+      <div id="todo-done-section" hidden>
+        <h3 class="list-heading">Done</h3>
+        <ul class="todo-list" id="todo-done"></ul>
+      </div>
+    </section>
+
     <section id="view-settings" class="view" data-view="settings" hidden>
       <h2>Settings</h2>
 
@@ -164,6 +183,10 @@
     <a href="#faults" data-tab="faults">
       <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3 2 20h20L12 3zm0 6v5m0 3v.5"/></svg>
       <span>Faults</span>
+    </a>
+    <a href="#todos" data-tab="todos">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m4 6 1.5 1.5L8 5M4 12l1.5 1.5L8 11M4 18l1.5 1.5L8 17M11 6.5h9M11 12.5h9M11 18.5h9"/></svg>
+      <span>To-do</span>
     </a>
     <a href="#settings" data-tab="settings">
       <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M12 2v3m0 14v3M2 12h3m14 0h3M4.9 4.9 7 7m10 10 2.1 2.1M4.9 19.1 7 17m10-10 2.1-2.1"/></svg>
@@ -306,6 +329,33 @@
         </div>
 
         <button type="button" class="btn btn-block btn-danger" id="fault-delete" hidden>Delete</button>
+      </div>
+    </form>
+  </dialog>
+
+  <!-- Edit to-do -->
+  <dialog id="todo-dialog" class="sheet" aria-labelledby="todo-dialog-title">
+    <form id="todo-form" method="dialog" novalidate>
+      <header class="sheet-header">
+        <button type="button" class="link-btn" data-close>Cancel</button>
+        <h2 id="todo-dialog-title">Edit to-do</h2>
+        <button type="submit" class="link-btn strong">Save</button>
+      </header>
+
+      <div class="sheet-body">
+        <p class="form-error" id="todo-error" role="alert" hidden></p>
+
+        <label class="field">
+          <span>Job</span>
+          <input type="text" name="title" autocomplete="off">
+        </label>
+
+        <label class="field">
+          <span>Notes</span>
+          <textarea name="notes" rows="6" placeholder="Part numbers, steps, links…"></textarea>
+        </label>
+
+        <button type="button" class="btn btn-block btn-danger" id="todo-delete">Delete to-do</button>
       </div>
     </form>
   </dialog>
