@@ -18,7 +18,7 @@ signal, and keeps the phone and Mac in sync through a private GitHub project.
 | `sw.js` | The "service worker": saves the app on the phone so it works offline |
 | `manifest.webmanifest` | Tells the phone the app's name, icon, and to open full-screen |
 | `icons/` | App icons (redraw with `python3 tools/make-icons.py`) |
-| `img/z4.jpg` | Header photo: 2006 BMW Z4 (E85) 2.5si by OSX, [Wikimedia Commons](https://commons.wikimedia.org/wiki/File:2006_BMW_Z4_(E85)_2.5si_convertible_(2012-10-26)_01.jpg), public domain |
+| `img/z4.webp` | Header photo (background removed): 2006 BMW Z4 (E85) 2.5si by OSX, [Wikimedia Commons](https://commons.wikimedia.org/wiki/File:2006_BMW_Z4_(E85)_2.5si_convertible_(2012-10-26)_01.jpg), public domain |
 | `private/` | **Your data files. Never uploaded** (listed in `.gitignore`) |
 | `Start Z4 Log.command` | Double-click to run a local test copy on this Mac |
 

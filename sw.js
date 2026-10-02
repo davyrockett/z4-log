@@ -2,7 +2,7 @@
 //
 // IMPORTANT: whenever any file below changes, bump VERSION.
 // That is how phones learn there's an update to download.
-const VERSION = 'v12';
+const VERSION = 'v13';
 const CACHE = `z4log-${VERSION}`;
 
 const ASSETS = [
@@ -16,7 +16,7 @@ const ASSETS = [
   './icons/icon-192.png',
   './icons/icon-512.png',
   './icons/apple-touch-icon.png',
-  './img/z4.jpg',
+  './img/z4.webp',
 ];
 
 self.addEventListener('install', (event) => {
