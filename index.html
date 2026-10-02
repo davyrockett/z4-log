@@ -43,9 +43,27 @@
   <main>
     <section id="view-garage" class="view" data-view="garage">
       <h2>Garage log</h2>
-      <div class="card empty">
-        <p>Coming in Phase 2.</p>
-        <p class="muted">Maintenance, repairs, upgrades and diagnosis, with running totals for cost and hours.</p>
+
+      <div class="totals" aria-live="polite">
+        <div><span class="label">Spent</span><span class="value" id="total-cost">$0</span></div>
+        <div><span class="label">Labor</span><span class="value" id="total-hours">0 h</span></div>
+        <div><span class="label">Entries</span><span class="value" id="total-count">0</span></div>
+      </div>
+
+      <div class="chips" role="radiogroup" aria-label="Filter by category" id="garage-filter">
+        <button type="button" role="radio" data-filter="all">All</button>
+        <button type="button" role="radio" data-filter="maintenance">Maintenance</button>
+        <button type="button" role="radio" data-filter="repair">Repair</button>
+        <button type="button" role="radio" data-filter="upgrade">Upgrade</button>
+        <button type="button" role="radio" data-filter="diagnosis">Diagnosis</button>
+      </div>
+
+      <button type="button" class="btn btn-block" id="garage-add">+ Add entry</button>
+
+      <ul class="entry-list" id="garage-list"></ul>
+      <div class="card empty" id="garage-empty" hidden>
+        <p>No entries yet.</p>
+        <p class="muted">Tap “Add entry” to log your first job, or import a backup from Settings.</p>
       </div>
     </section>
 
@@ -68,6 +86,15 @@
           <button type="button" role="radio" data-theme-choice="dark">Dark</button>
         </div>
         <p class="muted">Auto follows your iPhone's light/dark setting.</p>
+      </div>
+
+      <div class="card">
+        <h3>Import backup</h3>
+        <p class="muted">Load a Z4 Log backup file (.json). This <strong>replaces</strong> everything currently in the app.</p>
+        <label class="btn btn-block btn-secondary file-btn">
+          Choose file…
+          <input type="file" id="import-file" accept=".json,application/json">
+        </label>
       </div>
 
       <div class="card">
@@ -97,6 +124,69 @@
     </a>
   </nav>
 
+  <!-- Add / edit garage entry -->
+  <dialog id="garage-dialog" class="sheet" aria-labelledby="garage-dialog-title">
+    <form id="garage-form" method="dialog" novalidate>
+      <header class="sheet-header">
+        <button type="button" class="link-btn" data-close>Cancel</button>
+        <h2 id="garage-dialog-title">New entry</h2>
+        <button type="submit" class="link-btn strong">Save</button>
+      </header>
+
+      <div class="sheet-body">
+        <p class="form-error" id="garage-error" role="alert" hidden></p>
+        <label class="field">
+          <span>Date</span>
+          <input type="date" name="date" required>
+        </label>
+
+        <fieldset class="field">
+          <legend>Category</legend>
+          <div class="choice-grid">
+            <label><input type="radio" name="category" value="maintenance" checked><span>Maintenance</span></label>
+            <label><input type="radio" name="category" value="repair"><span>Repair</span></label>
+            <label><input type="radio" name="category" value="upgrade"><span>Upgrade</span></label>
+            <label><input type="radio" name="category" value="diagnosis"><span>Diagnosis</span></label>
+          </div>
+        </fieldset>
+
+        <label class="field">
+          <span>Title</span>
+          <input type="text" name="title" required autocomplete="off" placeholder="e.g. Oil change">
+        </label>
+
+        <div class="field-row">
+          <label class="field">
+            <span>Parts cost ($)</span>
+            <input type="text" name="cost" inputmode="decimal" autocomplete="off" placeholder="0">
+          </label>
+          <label class="field">
+            <span>Labor (hours)</span>
+            <input type="text" name="hours" inputmode="decimal" autocomplete="off" placeholder="0">
+          </label>
+        </div>
+
+        <label class="field">
+          <span>Mileage <em class="muted">(optional)</em></span>
+          <input type="text" name="mileage" inputmode="numeric" autocomplete="off" placeholder="e.g. 200008">
+        </label>
+
+        <label class="field">
+          <span>Parts used</span>
+          <textarea name="parts" rows="2" placeholder="e.g. Oil filter, 7 qt 5W-30"></textarea>
+        </label>
+
+        <label class="field">
+          <span>Notes</span>
+          <textarea name="notes" rows="4"></textarea>
+        </label>
+
+        <button type="button" class="btn btn-block btn-danger" id="garage-delete" hidden>Delete entry</button>
+      </div>
+    </form>
+  </dialog>
+
+  <script src="db.js"></script>
   <script src="app.js"></script>
 </body>
 </html>

@@ -2,13 +2,14 @@
 //
 // IMPORTANT: whenever any file below changes, bump VERSION.
 // That is how phones learn there's an update to download.
-const VERSION = 'v1';
+const VERSION = 'v2';
 const CACHE = `z4log-${VERSION}`;
 
 const ASSETS = [
   './',
   './index.html',
   './styles.css',
+  './db.js',
   './app.js',
   './manifest.webmanifest',
   './icons/icon-192.png',
