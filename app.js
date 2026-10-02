@@ -1,6 +1,6 @@
 'use strict';
 
-const APP_VERSION = '0.2.0';
+const APP_VERSION = '0.3.0';
 
 /* ---------- Tabs ----------
    The part after # in the address picks the screen: #garage, #faults, #settings */
@@ -133,6 +133,7 @@ async function registerServiceWorker() {
 }
 
 /* ---------- Formatting helpers ---------- */
+const plural = (n, word) => `${n} ${word}${n === 1 ? '' : 's'}`;
 const money = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' });
 const moneyWhole = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 });
 const dateFmt = new Intl.DateTimeFormat('en-US', { month: 'short', day: 'numeric', year: 'numeric', timeZone: 'UTC' });
@@ -318,6 +319,161 @@ document.getElementById('garage-delete').addEventListener('click', async () => {
 garageDialog.querySelector('[data-close]').addEventListener('click', () => garageDialog.close());
 document.getElementById('garage-add').addEventListener('click', () => openGarageForm(null));
 
+/* ---------- Fault codes ---------- */
+let faults = [];
+let faultFilter = 'open';
+
+async function loadFaults() {
+  faults = (await db.getAll('faults')).sort((a, b) =>
+    (b.dateFixed || b.dateSeen).localeCompare(a.dateFixed || a.dateSeen) ||
+    (b.createdAt || '').localeCompare(a.createdAt || ''));
+  renderFaults();
+}
+
+function renderFaults() {
+  const openCount = faults.filter((f) => f.status === 'open').length;
+  document.getElementById('fault-open-count').textContent = String(openCount);
+  document.getElementById('fault-fixed-count').textContent = String(faults.length - openCount);
+
+  for (const chip of document.querySelectorAll('#fault-filter [data-filter]')) {
+    chip.setAttribute('aria-checked', String(chip.dataset.filter === faultFilter));
+  }
+
+  const shown = faultFilter === 'all' ? faults : faults.filter((f) => f.status === faultFilter);
+  const list = document.getElementById('fault-list');
+  list.replaceChildren(...shown.map((f) => {
+    const isOpen = f.status === 'open';
+    const when = isOpen
+      ? `Seen ${formatDate(f.dateSeen)}`
+      : `Fixed ${formatDate(f.dateFixed || f.dateSeen)}`;
+
+    const main = el('button', { type: 'button', class: 'entry' },
+      el('div', { class: 'entry-top' },
+        el('span', { class: 'fault-code mono' }, f.code),
+        el('span', { class: `badge ${f.status}` }, isOpen ? 'Open' : 'Fixed')),
+      f.description ? el('div', { class: 'fault-desc' }, f.description) : null,
+      el('div', { class: 'entry-date' }, when),
+      !isOpen && f.fixNotes ? el('div', { class: 'fault-fix-notes' }, f.fixNotes) : null);
+    main.addEventListener('click', () => openFaultForm(f));
+
+    const card = el('div', { class: `fault-card ${isOpen ? 'is-open' : 'is-fixed'}` }, main);
+    if (isOpen) {
+      const fixBtn = el('button', { type: 'button', class: 'btn btn-secondary' }, 'Mark fixed…');
+      fixBtn.addEventListener('click', () => openFaultForm(f, { markFixed: true }));
+      card.append(el('div', { class: 'fault-actions' }, fixBtn));
+    }
+    return el('li', {}, card);
+  }));
+
+  const empty = document.getElementById('fault-empty');
+  empty.hidden = shown.length > 0;
+  empty.querySelector('p').textContent =
+    !faults.length ? 'No fault codes.' : faultFilter === 'open' ? 'No open fault codes. Nice.' : 'Nothing here.';
+}
+
+for (const chip of document.querySelectorAll('#fault-filter [data-filter]')) {
+  chip.addEventListener('click', () => {
+    faultFilter = chip.dataset.filter;
+    renderFaults();
+  });
+}
+
+/* Add / edit form */
+const faultDialog = document.getElementById('fault-dialog');
+const faultForm = document.getElementById('fault-form');
+let editingFaultId = null;
+
+// The Resolution section only shows when status is Fixed.
+function syncResolution() {
+  const fixed = faultForm.elements.status.value === 'fixed';
+  document.getElementById('fault-resolution').hidden = !fixed;
+  if (fixed && !faultForm.elements.dateFixed.value) faultForm.elements.dateFixed.value = todayISO();
+}
+for (const radio of faultForm.querySelectorAll('input[name="status"]')) {
+  radio.addEventListener('change', syncResolution);
+}
+
+function openFaultForm(fault, { markFixed = false } = {}) {
+  editingFaultId = fault ? fault.id : null;
+  const f = faultForm.elements;
+  f.code.value = fault ? fault.code : '';
+  f.dateSeen.value = fault ? fault.dateSeen : todayISO();
+  f.description.value = fault ? fault.description : '';
+  f.status.value = markFixed ? 'fixed' : fault ? fault.status : 'open';
+  f.dateFixed.value = fault && fault.dateFixed ? fault.dateFixed : '';
+  f.fixNotes.value = fault ? fault.fixNotes : '';
+  syncResolution();
+
+  document.getElementById('fault-dialog-title').textContent =
+    markFixed ? 'Mark fixed' : fault ? 'Edit fault code' : 'New fault code';
+  document.getElementById('fault-delete').hidden = !fault;
+  document.getElementById('fault-error').hidden = true;
+  faultDialog.showModal();
+
+  const body = faultDialog.querySelector('.sheet-body');
+  if (markFixed) {
+    // Jump straight to "What fixed it"
+    document.getElementById('fault-resolution').scrollIntoView({ block: 'start' });
+    f.fixNotes.focus({ preventScroll: true });
+  } else {
+    body.scrollTop = 0;
+  }
+}
+
+function faultFormError(message) {
+  const err = document.getElementById('fault-error');
+  err.textContent = message;
+  err.hidden = false;
+  faultDialog.querySelector('.sheet-body').scrollTop = 0;
+}
+
+faultForm.addEventListener('submit', async (event) => {
+  event.preventDefault();
+  const f = faultForm.elements;
+  const code = f.code.value.trim().toUpperCase().replace(/\s+/g, '');
+  const status = f.status.value;
+  const dateFixed = status === 'fixed' ? (f.dateFixed.value || todayISO()) : '';
+
+  if (!code) return faultFormError('Please enter the code, like P0171.');
+  if (!f.dateSeen.value) return faultFormError('Please pick the date you saw it.');
+  if (dateFixed && dateFixed < f.dateSeen.value) return faultFormError('Date fixed is before the date it was seen.');
+
+  const existing = faults.find((x) => x.id === editingFaultId);
+  const now = new Date().toISOString();
+  const fault = {
+    id: editingFaultId || newId(),
+    code,
+    description: f.description.value.trim(),
+    dateSeen: f.dateSeen.value,
+    status,
+    dateFixed,
+    fixNotes: f.fixNotes.value.trim(),
+    createdAt: existing ? existing.createdAt : now,
+    updatedAt: now,
+  };
+
+  try {
+    await db.put('faults', fault);
+  } catch (e) {
+    return faultFormError(`Couldn't save: ${e.message}`);
+  }
+  faultDialog.close();
+  const justFixed = existing && existing.status === 'open' && status === 'fixed';
+  toast(justFixed ? `${code} marked fixed` : existing ? 'Fault code updated' : 'Fault code added');
+  loadFaults();
+});
+
+document.getElementById('fault-delete').addEventListener('click', async () => {
+  if (!editingFaultId || !confirm('Delete this fault code? This can’t be undone.')) return;
+  await db.remove('faults', editingFaultId);
+  faultDialog.close();
+  toast('Fault code deleted');
+  loadFaults();
+});
+
+faultDialog.querySelector('[data-close]').addEventListener('click', () => faultDialog.close());
+document.getElementById('fault-add').addEventListener('click', () => openFaultForm(null));
+
 /* ---------- Import backup ---------- */
 function cleanGarageEntry(raw) {
   const num = (v) => { const n = parseNumber(v); return n >= 0 ? n : 0; };
@@ -333,6 +489,25 @@ function cleanGarageEntry(raw) {
     mileage: Math.round(num(raw.mileage)) || null,
     parts: String(raw.parts || ''),
     notes: String(raw.notes || ''),
+    createdAt: raw.createdAt || now,
+    updatedAt: raw.updatedAt || now,
+  };
+}
+
+function cleanFault(raw) {
+  const isDate = (v) => /^\d{4}-\d{2}-\d{2}$/.test(v || '');
+  const code = String((raw && raw.code) || '').trim().toUpperCase().replace(/\s+/g, '');
+  if (!code || !isDate(raw.dateSeen)) return null;
+  const status = raw.status === 'fixed' ? 'fixed' : 'open';
+  const now = new Date().toISOString();
+  return {
+    id: raw.id || newId(),
+    code,
+    description: String(raw.description || ''),
+    dateSeen: raw.dateSeen,
+    status,
+    dateFixed: status === 'fixed' ? (isDate(raw.dateFixed) ? raw.dateFixed : raw.dateSeen) : '',
+    fixNotes: String(raw.fixNotes || ''),
     createdAt: raw.createdAt || now,
     updatedAt: raw.updatedAt || now,
   };
@@ -355,12 +530,12 @@ document.getElementById('import-file').addEventListener('change', async (event) 
   }
 
   const garageIn = data.garage.map(cleanGarageEntry);
-  const skipped = garageIn.filter((e) => !e).length;
-  const faultsIn = Array.isArray(data.faults) ? data.faults : [];
-  const clean = { garage: garageIn.filter(Boolean), faults: faultsIn };
+  const faultsIn = (Array.isArray(data.faults) ? data.faults : []).map(cleanFault);
+  const skipped = garageIn.filter((e) => !e).length + faultsIn.filter((f) => !f).length;
+  const clean = { garage: garageIn.filter(Boolean), faults: faultsIn.filter(Boolean) };
 
-  const msg = `Import ${clean.garage.length} garage entries and ${clean.faults.length} fault codes?` +
-    (skipped ? `\n\n${skipped} entries are missing a date or title and will be skipped.` : '') +
+  const msg = `Import ${plural(clean.garage.length, 'garage entry').replace(/entrys$/, 'entries')} and ${plural(clean.faults.length, 'fault code')}?` +
+    (skipped ? `\n\n${plural(skipped, 'item')} ${skipped === 1 ? 'is' : 'are'} missing a date, title or code and will be skipped.` : '') +
     `\n\nThis replaces everything currently in the app.`;
   if (!confirm(msg)) return;
 
@@ -369,14 +544,15 @@ document.getElementById('import-file').addEventListener('change', async (event) 
   } catch (e) {
     return alert(`Import failed, nothing was changed.\n\n${e.message}`);
   }
-  await loadGarage();
-  toast(`Imported ${clean.garage.length} entries`);
+  await Promise.all([loadGarage(), loadFaults()]);
+  toast(`Imported ${clean.garage.length} entries, ${plural(clean.faults.length, 'code')}`);
   location.hash = '#garage';
 });
 
 /* ---------- Start ---------- */
 showView();
 loadGarage();
+loadFaults();
 setTheme(getTheme());
 updateNetStatus();
 requestPersistentStorage().then(refreshFacts);

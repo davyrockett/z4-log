@@ -44,6 +44,7 @@
 
 /* ---------- Base ---------- */
 *, *::before, *::after { box-sizing: border-box; }
+[hidden] { display: none !important; }
 
 html {
   font-size: 18px;
@@ -389,3 +390,34 @@ dialog.sheet::backdrop { background: rgba(0, 0, 0, 0.5); }
   text-align: center;
 }
 .form-error { background: var(--surface); border: 2px solid var(--danger); border-radius: 10px; padding: 10px 12px; margin: 0 0 16px; }
+
+/* ---------- Fault codes ---------- */
+.totals-2 { grid-template-columns: 1fr 1fr; }
+.mono { font-family: ui-monospace, "SF Mono", Menlo, monospace; letter-spacing: 0.03em; }
+.field input.mono { text-transform: uppercase; }
+.field input.mono::placeholder { text-transform: none; }
+
+.fault-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  overflow: hidden;
+}
+.fault-card.is-open { border-left: 6px solid var(--danger); }
+.fault-card.is-fixed { border-left: 6px solid var(--ok); }
+.fault-card .entry { border: 0; border-radius: 0; background: transparent; }
+.fault-code { font-size: 1.25rem; font-weight: 800; }
+.fault-desc { margin-bottom: 4px; overflow-wrap: anywhere; }
+.fault-fix-notes { color: var(--muted); font-size: 0.9rem; overflow-wrap: anywhere; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.fault-actions { padding: 0 16px 14px; }
+.fault-actions .btn { width: 100%; margin: 0; }
+
+.badge.open { color: var(--danger); }
+.badge.fixed { color: var(--ok); }
+
+.resolution {
+  border-top: 2px solid var(--border);
+  padding-top: 16px;
+  margin-top: 8px;
+}
+.resolution[hidden] { display: none; }

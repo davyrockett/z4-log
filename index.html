@@ -69,9 +69,24 @@
 
     <section id="view-faults" class="view" data-view="faults" hidden>
       <h2>Fault codes</h2>
-      <div class="card empty">
-        <p>Coming in Phase 3.</p>
-        <p class="muted">Track codes, when you saw them, and how you fixed them.</p>
+
+      <div class="totals totals-2" aria-live="polite">
+        <div><span class="label">Open</span><span class="value" id="fault-open-count">0</span></div>
+        <div><span class="label">Fixed</span><span class="value" id="fault-fixed-count">0</span></div>
+      </div>
+
+      <div class="chips" role="radiogroup" aria-label="Filter by status" id="fault-filter">
+        <button type="button" role="radio" data-filter="open">Open</button>
+        <button type="button" role="radio" data-filter="fixed">Fixed</button>
+        <button type="button" role="radio" data-filter="all">All</button>
+      </div>
+
+      <button type="button" class="btn btn-block" id="fault-add">+ Add fault code</button>
+
+      <ul class="entry-list" id="fault-list"></ul>
+      <div class="card empty" id="fault-empty" hidden>
+        <p>No fault codes.</p>
+        <p class="muted">Tap “Add fault code” when your scanner shows one.</p>
       </div>
     </section>
 
@@ -182,6 +197,59 @@
         </label>
 
         <button type="button" class="btn btn-block btn-danger" id="garage-delete" hidden>Delete entry</button>
+      </div>
+    </form>
+  </dialog>
+
+  <!-- Add / edit fault code -->
+  <dialog id="fault-dialog" class="sheet" aria-labelledby="fault-dialog-title">
+    <form id="fault-form" method="dialog" novalidate>
+      <header class="sheet-header">
+        <button type="button" class="link-btn" data-close>Cancel</button>
+        <h2 id="fault-dialog-title">New fault code</h2>
+        <button type="submit" class="link-btn strong">Save</button>
+      </header>
+
+      <div class="sheet-body">
+        <p class="form-error" id="fault-error" role="alert" hidden></p>
+
+        <div class="field-row">
+          <label class="field">
+            <span>Code</span>
+            <input type="text" name="code" required autocomplete="off" autocapitalize="characters" spellcheck="false" placeholder="e.g. P0171" class="mono">
+          </label>
+          <label class="field">
+            <span>Date seen</span>
+            <input type="date" name="dateSeen" required>
+          </label>
+        </div>
+
+        <label class="field">
+          <span>Description</span>
+          <textarea name="description" rows="2" placeholder="e.g. System too lean, bank 1"></textarea>
+        </label>
+
+        <fieldset class="field">
+          <legend>Status</legend>
+          <div class="choice-grid">
+            <label><input type="radio" name="status" value="open" checked><span>Open</span></label>
+            <label><input type="radio" name="status" value="fixed"><span>Fixed</span></label>
+          </div>
+        </fieldset>
+
+        <div id="fault-resolution" class="resolution" hidden>
+          <h3>Resolution</h3>
+          <label class="field">
+            <span>Date fixed</span>
+            <input type="date" name="dateFixed">
+          </label>
+          <label class="field">
+            <span>What fixed it</span>
+            <textarea name="fixNotes" rows="5" placeholder="e.g. Replaced cracked PCV hose; cleared code, no return after 50 mi"></textarea>
+          </label>
+        </div>
+
+        <button type="button" class="btn btn-block btn-danger" id="fault-delete" hidden>Delete fault code</button>
       </div>
     </form>
   </dialog>
