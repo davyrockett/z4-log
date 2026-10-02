@@ -534,3 +534,14 @@ a.pill { text-decoration: none; }
 .howto summary { min-height: 44px; display: flex; align-items: center; color: var(--accent); font-weight: 600; cursor: pointer; }
 .howto ol { padding-left: 20px; margin: 4px 0 0; }
 .howto li + li { margin-top: 6px; }
+
+/* ---------- Header photo ---------- */
+.brand { display: flex; align-items: center; gap: 12px; min-width: 0; }
+.brand-photo {
+  flex: none;
+  width: 92px;
+  height: 44px;
+  object-fit: cover;
+  border-radius: 8px;
+}
+.credit { margin: 12px 0 0; font-size: 0.75rem; }
