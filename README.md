@@ -1,6 +1,6 @@
 # Z4 Log
 
-A personal garage log and fault-code tracker for a 2008 BMW Z4 3.0si (E85).
+A personal garage log and fault-code tracker for a 2008 BMW Z4 3.0i (E85).
 It runs as an app on your iPhone's Home Screen, works with no signal, and keeps
 all its data on the device. There's no server and no account.
 

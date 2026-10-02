@@ -2,7 +2,7 @@
   "id": "./",
   "name": "Z4 Log",
   "short_name": "Z4 Log",
-  "description": "Garage log and fault codes for a 2008 BMW Z4 3.0si (E85).",
+  "description": "Garage log and fault codes for a 2008 BMW Z4 3.0i (E85).",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",

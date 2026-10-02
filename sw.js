@@ -2,7 +2,7 @@
 //
 // IMPORTANT: whenever any file below changes, bump VERSION.
 // That is how phones learn there's an update to download.
-const VERSION = 'v3';
+const VERSION = 'v4';
 const CACHE = `z4log-${VERSION}`;
 
 const ASSETS = [
