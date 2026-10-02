@@ -421,3 +421,11 @@ dialog.sheet::backdrop { background: rgba(0, 0, 0, 0.5); }
   margin-top: 8px;
 }
 .resolution[hidden] { display: none; }
+
+/* ---------- Backup ---------- */
+.subhead { margin-top: 8px; }
+.card .btn-block:last-child { margin-bottom: 0; }
+.banner-warn { background: #ffd23f; color: #1a1400; }
+.banner-warn .btn { background: #1a1400; color: #ffd23f; }
+.banner-warn .btn:first-child { background: transparent; color: #1a1400; border: 2px solid #1a1400; }
+.banner-actions { display: flex; gap: 8px; flex: none; }

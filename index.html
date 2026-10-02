@@ -40,6 +40,14 @@
     <button type="button" id="update-btn" class="btn btn-small">Update</button>
   </div>
 
+  <div id="backup-reminder" class="banner banner-warn" hidden>
+    <span id="backup-reminder-text">Time for a backup.</span>
+    <span class="banner-actions">
+      <button type="button" class="btn btn-small" id="backup-later">Later</button>
+      <button type="button" class="btn btn-small" id="backup-now">Back up</button>
+    </span>
+  </div>
+
   <main>
     <section id="view-garage" class="view" data-view="garage">
       <h2>Garage log</h2>
@@ -101,6 +109,18 @@
           <button type="button" role="radio" data-theme-choice="dark">Dark</button>
         </div>
         <p class="muted">Auto follows your iPhone's light/dark setting.</p>
+      </div>
+
+      <div class="card">
+        <h3>Back up</h3>
+        <p>Last backup: <strong id="last-backup">never</strong></p>
+        <p class="muted">Your data only lives on this device. Save a backup to iCloud Drive (or AirDrop it to your Mac) every week or two.</p>
+        <button type="button" class="btn btn-block" id="export-json">Save backup (.json)</button>
+
+        <h3 class="subhead">Export for spreadsheets</h3>
+        <p class="muted">Opens in Numbers, Excel or Google Sheets. Can't be imported back. Use the backup for that.</p>
+        <button type="button" class="btn btn-block btn-secondary" id="export-garage-csv">Garage log (.csv)</button>
+        <button type="button" class="btn btn-block btn-secondary" id="export-faults-csv">Fault codes (.csv)</button>
       </div>
 
       <div class="card">

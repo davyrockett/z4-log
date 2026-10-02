@@ -35,5 +35,12 @@ Then open http://localhost:8765 in Safari or Chrome. Press Ctrl+C in Terminal to
 ## Your data
 
 Data lives in the browser's storage on each device. The iPhone and the Mac do
-**not** sync. Use Settings → Export backup regularly (added in Phase 4) and keep
-the file in iCloud Drive.
+**not** sync.
+
+- **Settings → Save backup (.json)**: the full backup. On iPhone this opens the
+  Share sheet: choose *Save to Files → iCloud Drive*. A yellow banner reminds you
+  when you have changes and the last backup is a week or more old.
+- **Settings → Import backup**: loads a backup, replacing what's in the app. Also
+  how you move data between the Mac and the iPhone.
+- **Garage log / Fault codes (.csv)**: for Numbers, Excel or Google Sheets. These
+  can't be imported back.

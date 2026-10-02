@@ -40,18 +40,25 @@ async function withStores(names, mode, fn) {
   });
 }
 
+// Calls db.onChange() after any successful write (used for the backup reminder).
+function changed(promise) {
+  return promise.then((result) => { db.onChange(); return result; });
+}
+
 const db = {
+  onChange: () => {},
+
   getAll: (store) => withStores([store], 'readonly', (s) => s[store].getAll()),
-  put: (store, item) => withStores([store], 'readwrite', (s) => { s[store].put(item); }),
-  remove: (store, id) => withStores([store], 'readwrite', (s) => { s[store].delete(id); }),
+  put: (store, item) => changed(withStores([store], 'readwrite', (s) => { s[store].put(item); })),
+  remove: (store, id) => changed(withStores([store], 'readwrite', (s) => { s[store].delete(id); })),
 
   // Wipes both stores and loads the given records, all-or-nothing.
-  replaceAll: (data) => withStores(STORES, 'readwrite', (s) => {
+  replaceAll: (data) => changed(withStores(STORES, 'readwrite', (s) => {
     for (const name of STORES) {
       s[name].clear();
       for (const item of data[name] || []) s[name].put(item);
     }
-  }),
+  })),
 };
 
 function newId() {

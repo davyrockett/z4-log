@@ -1,6 +1,6 @@
 'use strict';
 
-const APP_VERSION = '0.3.0';
+const APP_VERSION = '0.4.0';
 
 /* ---------- Tabs ----------
    The part after # in the address picks the screen: #garage, #faults, #settings */
@@ -230,6 +230,7 @@ function renderGarage() {
   const empty = document.getElementById('garage-empty');
   empty.hidden = shown.length > 0;
   empty.querySelector('p').textContent = garage.length ? 'Nothing in this category.' : 'No entries yet.';
+  updateBackupStatus();
 }
 
 for (const chip of document.querySelectorAll('#garage-filter [data-filter]')) {
@@ -369,6 +370,7 @@ function renderFaults() {
   empty.hidden = shown.length > 0;
   empty.querySelector('p').textContent =
     !faults.length ? 'No fault codes.' : faultFilter === 'open' ? 'No open fault codes. Nice.' : 'Nothing here.';
+  updateBackupStatus();
 }
 
 for (const chip of document.querySelectorAll('#fault-filter [data-filter]')) {
@@ -547,6 +549,135 @@ document.getElementById('import-file').addEventListener('change', async (event) 
   await Promise.all([loadGarage(), loadFaults()]);
   toast(`Imported ${clean.garage.length} entries, ${plural(clean.faults.length, 'code')}`);
   location.hash = '#garage';
+});
+
+/* ---------- Export: backup (.json) and spreadsheets (.csv) ---------- */
+
+// iPhone: opens the Share sheet (Save to Files, AirDrop, Mail…). Mac: normal download.
+// Returns false if the person cancelled.
+// Note: nothing here waits on the database first. iPhone only allows the
+// Share sheet right after a tap, so we export from what's already loaded.
+async function saveFile(filename, type, text) {
+  const file = new File([text], filename, { type });
+  const isTouch = matchMedia('(pointer: coarse)').matches;
+  if (isTouch && navigator.canShare && navigator.canShare({ files: [file] })) {
+    try {
+      await navigator.share({ files: [file] });
+      return true;
+    } catch (e) {
+      if (e.name === 'AbortError') return false;
+      // Share sheet refused for another reason: fall back to a download
+    }
+  }
+  const url = URL.createObjectURL(file);
+  const link = el('a', { href: url, download: filename });
+  document.body.append(link);
+  link.click();
+  link.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 10000);
+  return true;
+}
+
+function backupJSON() {
+  return JSON.stringify({
+    app: 'z4-log',
+    format: 1,
+    exportedAt: new Date().toISOString(),
+    garage,
+    faults,
+  }, null, 2);
+}
+
+// One spreadsheet cell. Quotes when needed; stops spreadsheet apps from
+// treating text like "=..." or "-..." as a formula.
+function csvCell(value) {
+  if (value == null) return '';
+  let s = String(value);
+  if (typeof value === 'string' && /^[=+\-@\t\r]/.test(s)) s = "'" + s;
+  return /[",\r\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
+}
+
+function toCSV(headers, rows) {
+  const lines = [headers, ...rows].map((row) => row.map(csvCell).join(','));
+  return '﻿' + lines.join('\r\n') + '\r\n'; // ﻿ tells Excel it's UTF-8
+}
+
+function garageCSV() {
+  const rows = [...garage].reverse().map((e) => [ // oldest first
+    e.date, CATEGORY_LABELS[e.category], e.title, e.cost, e.hours, e.mileage ?? '', e.parts, e.notes,
+  ]);
+  return toCSV(['Date', 'Category', 'Title', 'Parts cost', 'Labor hours', 'Mileage', 'Parts used', 'Notes'], rows);
+}
+
+function faultsCSV() {
+  const rows = [...faults].sort((a, b) => a.dateSeen.localeCompare(b.dateSeen)).map((f) => [
+    f.code, f.description, f.dateSeen, f.status === 'open' ? 'Open' : 'Fixed', f.dateFixed, f.fixNotes,
+  ]);
+  return toCSV(['Code', 'Description', 'Date seen', 'Status', 'Date fixed', 'Fix notes'], rows);
+}
+
+async function exportBackup() {
+  const saved = await saveFile(`z4-log-backup-${todayISO()}.json`, 'application/json', backupJSON());
+  if (!saved) return;
+  storeSet(LAST_BACKUP_KEY, new Date().toISOString());
+  updateBackupStatus();
+  toast('Backup saved');
+}
+
+document.getElementById('export-json').addEventListener('click', exportBackup);
+document.getElementById('export-garage-csv').addEventListener('click', () =>
+  saveFile(`z4-log-garage-${todayISO()}.csv`, 'text/csv', garageCSV()));
+document.getElementById('export-faults-csv').addEventListener('click', () =>
+  saveFile(`z4-log-faults-${todayISO()}.csv`, 'text/csv', faultsCSV()));
+
+/* ---------- Backup reminder ----------
+   Shows a yellow banner when there are changes that haven't been backed up
+   and you've never backed up, or the last backup is a week or more old. */
+const LAST_BACKUP_KEY = 'z4log-last-backup';
+const LAST_CHANGE_KEY = 'z4log-last-change';
+const SNOOZE_KEY = 'z4log-backup-snooze';
+const REMIND_AFTER_DAYS = 7;
+const SNOOZE_DAYS = 3;
+const DAY = 24 * 60 * 60 * 1000;
+
+function storeGet(key) {
+  try { return localStorage.getItem(key); } catch (e) { return null; }
+}
+function storeSet(key, value) {
+  try { localStorage.setItem(key, value); } catch (e) {}
+}
+
+function daysAgoText(iso) {
+  const days = Math.floor((Date.now() - new Date(iso)) / DAY);
+  if (days <= 0) return 'today';
+  if (days === 1) return 'yesterday';
+  return `${days} days ago`;
+}
+
+function updateBackupStatus() {
+  const lastBackup = storeGet(LAST_BACKUP_KEY);
+  const lastChange = storeGet(LAST_CHANGE_KEY);
+  const snoozeUntil = storeGet(SNOOZE_KEY);
+
+  document.getElementById('last-backup').textContent = lastBackup ? daysAgoText(lastBackup) : 'never';
+
+  const hasData = garage.length > 0 || faults.length > 0;
+  const unsaved = !lastBackup || (lastChange && lastChange > lastBackup);
+  const overdue = !lastBackup || Date.now() - new Date(lastBackup) >= REMIND_AFTER_DAYS * DAY;
+  const snoozed = snoozeUntil && Date.now() < Number(snoozeUntil);
+
+  document.getElementById('backup-reminder').hidden = !(hasData && unsaved && overdue && !snoozed);
+  document.getElementById('backup-reminder-text').textContent =
+    lastBackup ? `Last backup ${daysAgoText(lastBackup)}.` : 'You haven’t backed up yet.';
+}
+
+// Every save stamps the time; the banner re-checks whenever a list redraws.
+db.onChange = () => storeSet(LAST_CHANGE_KEY, new Date().toISOString());
+
+document.getElementById('backup-now').addEventListener('click', exportBackup);
+document.getElementById('backup-later').addEventListener('click', () => {
+  storeSet(SNOOZE_KEY, String(Date.now() + SNOOZE_DAYS * DAY));
+  updateBackupStatus();
 });
 
 /* ---------- Start ---------- */
