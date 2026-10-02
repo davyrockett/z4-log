@@ -1,0 +1,102 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Z4 Log</title>
+  <meta name="description" content="Garage log and fault codes for a 2008 BMW Z4 3.0si (E85).">
+
+  <!-- Installable app (PWA) -->
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" href="icons/icon-192.png" type="image/png">
+  <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="Z4 Log">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)">
+  <meta name="theme-color" content="#0b0d10" media="(prefers-color-scheme: dark)">
+
+  <!-- Apply the saved theme before anything draws, so there's no flash -->
+  <script>
+    try {
+      var t = localStorage.getItem('z4log-theme');
+      if (t === 'light' || t === 'dark') document.documentElement.dataset.theme = t;
+    } catch (e) {}
+  </script>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <header class="app-header">
+    <div>
+      <h1>Z4 Log</h1>
+      <p class="subtitle">2008 Z4 3.0si · E85</p>
+    </div>
+    <span id="net-status" class="pill" hidden>Offline</span>
+  </header>
+
+  <div id="update-banner" class="banner" hidden>
+    <span>A new version is ready.</span>
+    <button type="button" id="update-btn" class="btn btn-small">Update</button>
+  </div>
+
+  <main>
+    <section id="view-garage" class="view" data-view="garage">
+      <h2>Garage log</h2>
+      <div class="card empty">
+        <p>Coming in Phase 2.</p>
+        <p class="muted">Maintenance, repairs, upgrades and diagnosis, with running totals for cost and hours.</p>
+      </div>
+    </section>
+
+    <section id="view-faults" class="view" data-view="faults" hidden>
+      <h2>Fault codes</h2>
+      <div class="card empty">
+        <p>Coming in Phase 3.</p>
+        <p class="muted">Track codes, when you saw them, and how you fixed them.</p>
+      </div>
+    </section>
+
+    <section id="view-settings" class="view" data-view="settings" hidden>
+      <h2>Settings</h2>
+
+      <div class="card">
+        <h3>Appearance</h3>
+        <div class="segmented" role="radiogroup" aria-label="Theme">
+          <button type="button" role="radio" data-theme-choice="auto">Auto</button>
+          <button type="button" role="radio" data-theme-choice="light">Light</button>
+          <button type="button" role="radio" data-theme-choice="dark">Dark</button>
+        </div>
+        <p class="muted">Auto follows your iPhone's light/dark setting.</p>
+      </div>
+
+      <div class="card">
+        <h3>This device</h3>
+        <dl class="facts">
+          <dt>Installed to Home Screen</dt><dd id="fact-installed">–</dd>
+          <dt>Works offline</dt><dd id="fact-offline">–</dd>
+          <dt>Storage protected</dt><dd id="fact-persist">–</dd>
+          <dt>App version</dt><dd id="fact-version">–</dd>
+        </dl>
+      </div>
+    </section>
+  </main>
+
+  <nav class="tabbar" aria-label="Sections">
+    <a href="#garage" data-tab="garage">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14.7 6.3a4 4 0 0 0-5.4 5.2L3 17.8V21h3.2l6.3-6.3a4 4 0 0 0 5.2-5.4l-2.6 2.6-2.4-.6-.6-2.4z"/></svg>
+      <span>Garage</span>
+    </a>
+    <a href="#faults" data-tab="faults">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3 2 20h20L12 3zm0 6v5m0 3v.5"/></svg>
+      <span>Faults</span>
+    </a>
+    <a href="#settings" data-tab="settings">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M12 2v3m0 14v3M2 12h3m14 0h3M4.9 4.9 7 7m10 10 2.1 2.1M4.9 19.1 7 17m10-10 2.1-2.1"/></svg>
+      <span>Settings</span>
+    </a>
+  </nav>
+
+  <script src="app.js"></script>
+</body>
+</html>

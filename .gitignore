@@ -1,0 +1,6 @@
+# Your personal data lives here — never uploaded to GitHub
+private/
+
+# Mac / editor clutter
+.DS_Store
+.claude/

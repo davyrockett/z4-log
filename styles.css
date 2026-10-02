@@ -1,0 +1,208 @@
+/* ---------- Colors ----------
+   Light is the default: high contrast for reading in bright sun.
+   Dark follows the phone setting, or can be forced from Settings. */
+:root {
+  --bg: #ffffff;
+  --surface: #f1f3f5;
+  --text: #0a0a0a;
+  --muted: #4a4f57;
+  --border: #b9bec6;
+  --accent: #0653b6;
+  --accent-text: #ffffff;
+  --danger: #b3261e;
+  --ok: #1b6e3a;
+  color-scheme: light;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0b0d10;
+    --surface: #171a1f;
+    --text: #f2f4f7;
+    --muted: #a9b0ba;
+    --border: #3a4049;
+    --accent: #5aa2ff;
+    --accent-text: #0b0d10;
+    --danger: #ff8a80;
+    --ok: #6fd391;
+    color-scheme: dark;
+  }
+}
+
+:root[data-theme="dark"] {
+  --bg: #0b0d10;
+  --surface: #171a1f;
+  --text: #f2f4f7;
+  --muted: #a9b0ba;
+  --border: #3a4049;
+  --accent: #5aa2ff;
+  --accent-text: #0b0d10;
+  --danger: #ff8a80;
+  --ok: #6fd391;
+  color-scheme: dark;
+}
+
+/* ---------- Base ---------- */
+*, *::before, *::after { box-sizing: border-box; }
+
+html {
+  font-size: 18px;
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+  line-height: 1.4;
+  -webkit-tap-highlight-color: transparent;
+  /* room for the fixed tab bar */
+  padding-bottom: calc(76px + env(safe-area-inset-bottom));
+}
+
+h1, h2, h3 { line-height: 1.2; margin: 0; }
+h2 { font-size: 1.5rem; margin: 8px 0 16px; }
+h3 { font-size: 1.1rem; margin-bottom: 12px; }
+p { margin: 0 0 8px; }
+.muted { color: var(--muted); font-size: 0.9rem; }
+
+/* ---------- Header ---------- */
+.app-header {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  background: var(--bg);
+  border-bottom: 1px solid var(--border);
+  padding: calc(12px + env(safe-area-inset-top)) 16px 12px;
+}
+.app-header h1 { font-size: 1.4rem; font-weight: 800; }
+.subtitle { margin: 2px 0 0; color: var(--muted); font-size: 0.85rem; }
+
+.pill {
+  border: 2px solid var(--danger);
+  color: var(--danger);
+  border-radius: 999px;
+  padding: 4px 12px;
+  font-size: 0.8rem;
+  font-weight: 700;
+}
+
+/* ---------- Layout ---------- */
+main {
+  max-width: 640px;
+  margin: 0 auto;
+  padding: 16px;
+}
+
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 16px;
+  margin-bottom: 16px;
+}
+.card.empty { text-align: center; padding: 32px 16px; }
+
+/* ---------- Buttons ---------- */
+.btn {
+  min-height: 48px;
+  padding: 0 20px;
+  border: 0;
+  border-radius: 12px;
+  background: var(--accent);
+  color: var(--accent-text);
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+}
+.btn-small { min-height: 40px; padding: 0 16px; font-size: 0.9rem; }
+
+.segmented {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  border: 2px solid var(--accent);
+  border-radius: 12px;
+  overflow: hidden;
+  margin-bottom: 8px;
+}
+.segmented button {
+  min-height: 48px;
+  border: 0;
+  background: transparent;
+  color: var(--text);
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+.segmented button + button { border-left: 2px solid var(--accent); }
+.segmented button[aria-checked="true"] {
+  background: var(--accent);
+  color: var(--accent-text);
+}
+
+/* ---------- Facts list ---------- */
+.facts {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 10px 12px;
+  margin: 0;
+}
+.facts dt { color: var(--muted); }
+.facts dd { margin: 0; font-weight: 700; text-align: right; }
+.facts .yes { color: var(--ok); }
+.facts .no { color: var(--danger); }
+
+/* ---------- Update banner ---------- */
+.banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  background: var(--accent);
+  color: var(--accent-text);
+  padding: 10px 16px;
+  font-weight: 600;
+}
+.banner .btn { background: var(--accent-text); color: var(--accent); }
+.banner[hidden] { display: none; }
+
+/* ---------- Bottom tab bar ---------- */
+.tabbar {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 10;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  background: var(--bg);
+  border-top: 1px solid var(--border);
+  padding-bottom: env(safe-area-inset-bottom);
+}
+.tabbar a {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  min-height: 64px;
+  color: var(--muted);
+  text-decoration: none;
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+.tabbar svg {
+  width: 28px;
+  height: 28px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.tabbar a[aria-current="page"] { color: var(--accent); }
