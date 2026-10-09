@@ -32,6 +32,7 @@ concrete. Likes to see things working: verify before saying "done".
 **Taste**
 - Labels and descriptions plain and descriptive. Jokes belong in names (e.g. "Page Fright"), not taglines.
 - Keep screens uncluttered: show extra controls only when they're relevant.
+- Commit messages: a short, plain description of the change.
 - When renaming or moving an app, keep the old address working with a redirect repo.
 
 **New apps:** create the repo under davyrockett and turn on GitHub Pages; David's Mac downloads new
