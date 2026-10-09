@@ -6,7 +6,7 @@
 This section is the same in every one of David's app repos. If David states a new general preference
 (not specific to this app), add it here, in this file, and commit it. David's Mac copies it to the other repos.
 
-**Who David is.** A guitar teacher and gigging guitarist who builds personal and teaching apps with Claude.
+**Who David is.** A guitar teacher and gigging guitarist (he/him) who builds personal and teaching apps with Claude.
 Comfortable with tech but not a programmer: explain in plain words, skip jargon, keep replies short and
 concrete. Likes to see things working: verify before saying "done".
 
@@ -33,6 +33,10 @@ concrete. Likes to see things working: verify before saying "done".
 - Labels and descriptions plain and descriptive. Jokes belong in names (e.g. "Page Fright"), not taglines.
 - Keep screens uncluttered: show extra controls only when they're relevant.
 - When renaming or moving an app, keep the old address working with a redirect repo.
+
+**New apps:** create the repo under davyrockett and turn on GitHub Pages; David's Mac downloads new
+davyrockett repos into `~/Dropbox/Local/Claude Apps/` automatically. Give each new app its own CLAUDE.md
+with this section (copy it from any other app) plus an "## This app" section.
 <!-- shared-preferences:end -->
 
 ## This app
