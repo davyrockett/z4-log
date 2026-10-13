@@ -32,6 +32,8 @@ concrete. Likes to see things working: verify before saying "done".
 **Taste**
 - Labels and descriptions plain and descriptive. Jokes belong in names (e.g. "Page Fright"), not taglines.
 - Keep screens uncluttered: show extra controls only when they're relevant.
+- Nothing should jump around: when a control doesn't apply, grey it out in place rather than hiding it, and
+  reserve space for things that appear, so other controls never shift.
 - Commit messages: a short, plain description of the change.
 - When renaming or moving an app, keep the old address working with a redirect repo.
 
