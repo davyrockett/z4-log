@@ -4,7 +4,7 @@ A personal garage log, fault/warning tracker and to-do list for a 2008 BMW Z4 3.
 It runs as an app on your iPhone's Home Screen and your Mac's Dock, works with no
 signal, and keeps the phone and Mac in sync through a private GitHub project.
 
-**Live app:** https://davyrockett.github.io/z4-log/ (open in Safari on iPhone → Share → Add to Home Screen)
+**Live app:** https://www.davyrockett.com/z4-log/ (open in Safari on iPhone → Share → Add to Home Screen)
 
 ## What's in here
 

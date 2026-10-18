@@ -52,7 +52,7 @@ with this section (copy it from any other app) plus an "## This app" section.
 ## This app
 
 Garage log, fault/warning tracker and to-do list for David's 2008 BMW Z4 3.0i (E85).
-Live: https://davyrockett.github.io/z4-log/ See README.md.
+Live: https://www.davyrockett.com/z4-log/ See README.md.
 
 - **Publish:** bump `VERSION` in `sw.js`, commit, push, confirm live.
 - **Test locally:** `python3 -m http.server 8765` here, open http://localhost:8765/. Local data is separate.
