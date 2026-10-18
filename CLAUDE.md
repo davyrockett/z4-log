@@ -55,4 +55,4 @@ Live: https://davyrockett.github.io/z4-log/ See README.md.
 - Files: `index.html`, `styles.css`, `app.js`, `db.js` (IndexedDB), `sync.js` (GitHub sync).
 - **Data:** stored on each device and in the PRIVATE repo davyrockett/z4-log-data (`data.json`), synced with
   David's access key. Never commit keys or anything in `private/`.
-- On the Mac this repo lives in ~/Documents/z4-log (not the Claude Apps folder).
+- On the Mac this repo lives in ~/Dropbox/Local/Claude Apps/z4-log (moved from ~/Documents on 2026-10-17).
