@@ -2,7 +2,7 @@
 //
 // IMPORTANT: whenever any file below changes, bump VERSION.
 // That is how phones learn there's an update to download.
-const VERSION = 'v16';
+const VERSION = 'v17';
 const CACHE = `z4log-${VERSION}`;
 
 const ASSETS = [
@@ -10,6 +10,7 @@ const ASSETS = [
   './index.html',
   './move.js',
   './suite.js',
+  './share.js',
   './styles.css',
   './db.js',
   './sync.js',

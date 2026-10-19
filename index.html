@@ -20,6 +20,7 @@
   <!-- Apply the saved theme before anything draws, so there's no flash -->
   <script src="move.js" data-keep="z4log" data-guard="idb"></script>
   <script src="suite.js" defer></script>
+  <script src="share.js" defer></script>
   <script>
     try {
       var t = localStorage.getItem('z4log-theme');
@@ -204,6 +205,13 @@
           Choose file…
           <input type="file" id="import-file" accept=".json,application/json">
         </label>
+      </div>
+
+      <div class="card" data-share>
+        <h3>Share</h3>
+        <p class="muted" data-share-link></p>
+        <button type="button" class="btn btn-block btn-secondary" data-share-copy>Copy link</button>
+        <button type="button" class="btn btn-block btn-secondary" data-share-send hidden>Share…</button>
       </div>
 
       <div class="card">
