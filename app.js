@@ -1,6 +1,6 @@
 'use strict';
 
-const APP_VERSION = '0.9.6';
+const APP_VERSION = '0.9.7';
 
 /* ---------- Tabs ----------
    The part after # in the address picks the screen: #garage, #faults, #settings */
@@ -188,8 +188,8 @@ function toast(message) {
 }
 
 /* ---------- Forms: don't lose typing ----------
-   Each form remembers its contents when opened. Cancel (or Esc on the Mac)
-   asks first if anything changed. */
+   Each form remembers its contents when opened. Cancel, Esc on the Mac or a
+   tap outside the form asks first if anything changed. */
 const formState = (form) => JSON.stringify([...new FormData(form)]);
 
 function rememberForm(form) {
@@ -204,6 +204,9 @@ function guardDialog(dialog, form) {
   });
   dialog.addEventListener('cancel', (event) => {
     if (!discardOK()) event.preventDefault();
+  });
+  dialog.addEventListener('click', (event) => {
+    if (event.target === dialog && discardOK()) dialog.close();
   });
 }
 
