@@ -1,6 +1,6 @@
 'use strict';
 
-const APP_VERSION = '0.9.5';
+const APP_VERSION = '0.9.6';
 
 /* ---------- Tabs ----------
    The part after # in the address picks the screen: #garage, #faults, #settings */
