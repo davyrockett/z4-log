@@ -1,10 +1,10 @@
 'use strict';
 
-const APP_VERSION = '0.9.2';
+const APP_VERSION = '0.9.3';
 
 /* ---------- Tabs ----------
    The part after # in the address picks the screen: #garage, #faults, #settings */
-const VIEWS = ['garage', 'faults', 'todos', 'settings'];
+const VIEWS = ['garage', 'faults', 'todos', 'torque', 'settings'];
 
 function showView() {
   const name = location.hash.slice(1);

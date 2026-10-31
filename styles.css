@@ -444,7 +444,7 @@ dialog.sheet::backdrop { background: rgba(0, 0, 0, 0.5); }
 .totals .value { font-size: clamp(1.05rem, 5.6vw, 1.3rem); }
 
 /* ---------- To-do ---------- */
-.tabbar { grid-template-columns: repeat(4, 1fr); }
+.tabbar { grid-template-columns: repeat(5, 1fr); }
 
 .quick-add { display: flex; gap: 8px; margin-bottom: 16px; }
 .quick-add input {
@@ -550,3 +550,13 @@ a.pill { text-decoration: none; }
 .app-header h1, .app-header .subtitle { white-space: nowrap; }
 .header-pills { order: 3; flex-basis: 100%; }
 .header-pills:not(:has(> :not([hidden]))) { display: none; }
+
+/* ---------- Torque specs ---------- */
+.torque-intro { margin: -8px 0 16px; }
+.card h3 + .torque { margin-top: 10px; }
+.torque { display: grid; grid-template-columns: 1fr auto; margin: 0; }
+.torque dt, .torque dd { padding: 9px 0; border-top: 1px solid var(--border); }
+.torque dt:first-of-type, .torque dt:first-of-type + dd { border-top: 0; }
+.torque dt em { display: block; font-style: normal; font-size: 0.85rem; color: var(--muted); }
+.torque dd { margin: 0; padding-left: 12px; font-weight: 800; text-align: right; white-space: nowrap; }
+.torque dd small { display: block; font-size: 0.85rem; font-weight: 600; color: var(--muted); }

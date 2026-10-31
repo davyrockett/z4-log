@@ -22,6 +22,12 @@ signal, and keeps the phone and Mac in sync through a private GitHub project.
 | `private/` | **Your data files. Never uploaded** (listed in `.gitignore`) |
 | `Start Z4 Log.command` | Double-click to run a local test copy on this Mac |
 
+## Torque specs
+
+The **Torque** tab lists tightening torques for this car (2008 Z4 3.0i, E85, N52 engine):
+wheels and brakes, engine, front suspension, gearbox and differential. Each figure was checked
+against at least two sources; ones the sources disagree on are left out and named at the bottom.
+
 ## Using it
 
 - **iPhone:** open the live app in Safari → Share → **Add to Home Screen**.
