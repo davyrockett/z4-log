@@ -561,7 +561,7 @@ a.pill { text-decoration: none; }
 .torque dd { margin: 0; padding-left: 12px; font-weight: 800; text-align: right; white-space: nowrap; }
 .torque dd small { display: block; font-size: 0.85rem; font-weight: 600; color: var(--muted); }
 .torque-note { margin: 8px 0 0; }
-
+.spec-switch { grid-template-columns: 1fr 1fr; margin-bottom: 16px; }
 /* The suite's "All apps" button gets its own space at the left of the tab bar */
 body:has(#suite-home) .tabbar { padding-left: 60px; }
 #suite-home { bottom: calc(10px + env(safe-area-inset-bottom, 0px)) !important; left: calc(8px + env(safe-area-inset-left, 0px)) !important; }

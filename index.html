@@ -139,7 +139,13 @@
     </section>
 
     <section id="view-torque" class="view" data-view="torque" hidden>
-      <h2>Torque &amp; tires</h2>
+      <h2>Specs</h2>
+      <div class="segmented spec-switch" role="radiogroup" aria-label="Specs">
+        <button type="button" role="radio" data-spec="torque">Torque &amp; tires</button>
+        <button type="button" role="radio" data-spec="bolts">Bolts &amp; sockets</button>
+      </div>
+
+      <div data-spec-page="torque">
       <p class="muted torque-intro">For this car: 2008 Z4 3.0i (E85, N52 engine). BMW's factory figures, each checked against at least two sources. Bolts marked <strong>new</strong> are one-use: fit new ones.</p>
 
       <div class="card">
@@ -194,6 +200,39 @@
 
       <p class="muted">Left out because the sources disagree: valve cover bolts, strut top-mount nuts, control arm bolts, rear shock mounts. Look those up for the exact part before tightening.</p>
       <p class="muted">“+ 90°” means tighten to the torque, then turn a further quarter turn.</p>
+      </div>
+
+      <div data-spec-page="bolts" hidden>
+      <p class="muted torque-intro">For this car: 2008 Z4 3.0i (E85, N52 engine). Thread size and the tool each one takes, checked against at least two sources. “Allen” means a hex key or hex-bit socket. Torques are on the other page.</p>
+
+      <div class="card">
+        <h3>Wheels &amp; brakes</h3>
+        <dl class="torque">
+          <dt>Wheel lug bolts<em>M12 × 1.5, 60° cone seat, about 26 mm of thread</em></dt><dd>17 mm<small>socket</small></dd>
+          <dt>Front caliper carrier bolts<em>M12 × 1.5 × 32 mm, hex head</em></dt><dd>18 mm<small>socket</small></dd>
+          <dt>Rear caliper carrier bolts<em>hex head</em></dt><dd>16 mm<small>socket</small></dd>
+          <dt>Caliper guide bolts, front &amp; rear<em>under the rubber caps</em></dt><dd>7 mm<small>Allen</small></dd>
+          <dt>Brake disc set screw<em>M8 × 12 mm, soft and strips easily: clean out the head first</em></dt><dd>Allen</dd>
+        </dl>
+      </div>
+
+      <div class="card">
+        <h3>Engine (N52)</h3>
+        <dl class="torque">
+          <dt>Oil drain plug<em>M12 × 1.5, new aluminium sealing washer</em></dt><dd>17 mm<small>socket</small></dd>
+          <dt>Spark plugs<em>12-point plugs; thin-wall 3/8″-drive socket (BMW 12 12 20)</em></dt><dd>14 mm<small>12-point</small></dd>
+        </dl>
+      </div>
+
+      <div class="card">
+        <h3>Gearbox</h3>
+        <dl class="torque">
+          <dt>Manual gearbox fill &amp; drain plugs<em>M18 × 1.5; take the fill plug out first</em></dt><dd>17 mm<small>Allen</small></dd>
+        </dl>
+      </div>
+
+      <p class="muted">Left out because the sources disagree: oil filter housing cap (86 mm 16-flute cap wrench or 36 mm socket, depending on the cap), differential plugs (M22 × 1.5 with O-ring, but 14 mm or 17 mm Allen), anti-roll bar link nuts. Check those on the car before buying a tool.</p>
+      </div>
     </section>
 
     <section id="view-settings" class="view" data-view="settings" hidden>
@@ -300,7 +339,7 @@
     </a>
     <a href="#torque" data-tab="torque">
       <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4.5 18a9 9 0 1 1 15 0M12 14l4-5"/><circle cx="12" cy="14" r="1.5"/></svg>
-      <span>Torque</span>
+      <span>Specs</span>
     </a>
     <a href="#settings" data-tab="settings">
       <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M12 2v3m0 14v3M2 12h3m14 0h3M4.9 4.9 7 7m10 10 2.1 2.1M4.9 19.1 7 17m10-10 2.1-2.1"/></svg>

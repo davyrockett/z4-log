@@ -1,6 +1,6 @@
 'use strict';
 
-const APP_VERSION = '0.9.7';
+const APP_VERSION = '0.9.8';
 
 /* ---------- Tabs ----------
    The part after # in the address picks the screen: #garage, #faults, #settings */
@@ -53,6 +53,25 @@ function setTheme(choice) {
 for (const btn of document.querySelectorAll('[data-theme-choice]')) {
   btn.addEventListener('click', () => setTheme(btn.dataset.themeChoice));
 }
+
+/* ---------- Specs: Torque & tires | Bolts & sockets (remembered) ---------- */
+const SPEC_KEY = 'z4log-spec-page';
+
+function showSpec(page) {
+  if (page !== 'bolts') page = 'torque';
+  for (const btn of document.querySelectorAll('[data-spec]')) {
+    btn.setAttribute('aria-checked', String(btn.dataset.spec === page));
+  }
+  for (const el of document.querySelectorAll('[data-spec-page]')) {
+    el.hidden = el.dataset.specPage !== page;
+  }
+  try { localStorage.setItem(SPEC_KEY, page); } catch (e) {}
+}
+
+for (const btn of document.querySelectorAll('[data-spec]')) {
+  btn.addEventListener('click', () => showSpec(btn.dataset.spec));
+}
+try { showSpec(localStorage.getItem(SPEC_KEY)); } catch (e) { showSpec('torque'); }
 
 /* ---------- Online / offline indicator ---------- */
 function updateNetStatus() {
